@@ -1,0 +1,31 @@
+To set the back arrow button in the action bar of an activity
+
+
+public class ServicesViewActivity extends Activity {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        // etc...
+        getActionBar().setDisplayHomeAsUpEnabled(true);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+        case android.R.id.home:
+            NavUtils.navigateUpFromSameTask(this);
+            return true;
+        default:
+            return super.onOptionsItemSelected(item);
+        }
+    }
+}
+
+
+Now, in the Manifest.xml file write the following :-
+
+<activity android:name="com.example.ServicesViewActivity" >
+            <meta-data
+            android:name="android.support.PARENT_ACTIVITY"
+            android:value="com.example.ParentActivity" />
+    </activity>
