@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v4.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="com.tbits.upidemo.MainActivity"
+    tools:showIn="@layout/activity_main">
+
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="10dp"
+        tools:context="com.malav.deeplinked.MainActivity"
+        android:orientation="vertical">
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:id="@+id/editTextName"
+            android:hint="Enter Name"/>
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:id="@+id/editTextUpiId"
+            android:hint="Enter UPI ID"/>
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter Amount in INR"
+            android:id="@+id/editTextAmount"
+            android:layout_marginTop="10dp"
+            android:inputType="phone"/>
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:id="@+id/editTextNote"
+            android:hint="Enter a note (optional)"/>
+
+
+
+
+        <Button
+            android:id="@+id/submit"
+            android:layout_marginTop="30dp"
+            android:layout_width="match_parent"
+            android:background="@android:color/holo_blue_dark"
+            android:textColor="@android:color/white"
+            android:textAllCaps="false"
+            android:layout_height="wrap_content"
+            android:text="Click here to pay"/>
+
+
+
+    </LinearLayout>
+
+</android.support.v4.widget.NestedScrollView>

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:background="@android:color/white"
+    android:layout_height="match_parent"
+    android:padding="20dp"
+    tools:context="com.tbits.upidemo.TransactionActivity">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:orientation="vertical"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="80dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/upi"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:textSize="20sp"
+                    android:id="@+id/textViewName"
+                    android:textColor="@android:color/black"
+                    android:text="Paying Gomodular"/>
+                <ImageView
+                    android:onClick="onEdit"
+                    android:layout_width="20dp"
+                    android:layout_marginTop="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/edit"/>
+
+            </LinearLayout>
+            <TextView
+                android:layout_width="match_parent"
+                android:id="@+id/textViewUpi"
+                android:layout_height="wrap_content"
+                android:text="9963421604@upi"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:orientation="horizontal"
+                >
+
+                <ImageView
+                    android:src="@drawable/rupee"
+
+                    android:layout_width="20dp"
+                    android:layout_height="60dp" />
+
+                <EditText
+                    android:layout_width="match_parent"
+                    android:hint="Amount"
+                    android:backgroundTint="@android:color/black"
+                    android:textStyle="bold"
+                    android:textCursorDrawable="@null"
+                    android:id="@+id/editTextAmount"
+                    android:inputType="phone"
+                    android:layout_marginLeft="10dp"
+                    android:textSize="30sp"
+                    android:layout_height="wrap_content" />
+
+            </LinearLayout>
+
+            <EditText
+                android:layout_width="match_parent"
+                android:hint="Add a note (optional)"
+                android:backgroundTint="@android:color/black"
+                android:textCursorDrawable="@null"
+                android:layout_marginTop="10dp"
+                android:id="@+id/editTextNote"
+                android:layout_height="wrap_content" />
+
+            <Button
+                android:layout_width="200dp"
+                android:layout_gravity="center"
+                android:text="Pay"
+                android:id="@+id/submit"
+                android:textSize="18sp"
+                android:textColor="@android:color/white"
+                android:layout_marginTop="60dp"
+                android:background="@drawable/my_button_background_solid"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+    </ScrollView>
+
+
+</LinearLayout>
