@@ -37,6 +37,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
+import com.github.barteksc.pdfviewer.PDFView;
+import com.github.gcacace.signaturepad.views.SignaturePad;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
@@ -52,6 +54,8 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
     public static final int REQUEST_CODE_CAPTURE_PERM = 1234;
     private MediaProjectionManager mMediaProjectionManager;
+    SignaturePad mSignaturePad;
+    PDFView pdfView;
     // Activity request codes
     private static final int CAMERA_CAPTURE_IMAGE_REQUEST_CODE = 100;
     private static final int CAMERA_CAPTURE_VIDEO_REQUEST_CODE = 200;
@@ -124,6 +128,26 @@ public class MainActivity extends AppCompatActivity {
         btnRecordVideo = findViewById(R.id.btnRecordVideo);
         mMediaProjectionManager = (MediaProjectionManager)getSystemService(android.content.Context.MEDIA_PROJECTION_SERVICE);
 
+
+        mSignaturePad = (SignaturePad) findViewById(R.id.signature_pad);
+        mSignaturePad.setOnSignedListener(new SignaturePad.OnSignedListener() {
+
+            @Override
+            public void onStartSigning() {
+                //Event triggered when the pad is touched
+            }
+
+            @Override
+            public void onSigned() {
+                //Event triggered when the pad is signed
+            }
+
+            @Override
+            public void onClear() {
+                //Event triggered when the pad is cleared
+            }
+        });
+
         /**
          * Capture image on button click
          */
@@ -159,19 +183,18 @@ public class MainActivity extends AppCompatActivity {
         restoreFromBundle(savedInstanceState);
         viewPager = (ViewPager) findViewById(R.id.viewpagercamera);
         setupViewPager(viewPager);
+
     }
 
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public void onStart(View view) {
-
+    public void onStartScreenRecording(View view) {
         Intent permissionIntent = mMediaProjectionManager.createScreenCaptureIntent();
         startActivityForResult(permissionIntent, REQUEST_CODE_CAPTURE_PERM);
     }
 
 
-    public void onStop(View v) {
-
+    public void onStopScreenRecording(View v) {
         releaseEncoders();
     }
 
@@ -506,6 +529,27 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void onResetSignaturePad(View view) {
+        mSignaturePad.clear();
+    }
+
+    public void onSaveSignatureAndCloseApplication(View view) {
+        Toast.makeText(this, "Screen recording saved.", Toast.LENGTH_SHORT).show();
+        onStopScreenRecording(view);
+    }
+
+    public void onFullScreenMode(View view) {
+
+    }
+
+    public void onDownloadFile(View view) {
+        pdfView = (PDFView) findViewById(R.id.pdfView);
+        txtDescription.setVisibility(View.GONE);
+        pdfView.setVisibility(View.VISIBLE);
+        pdfView.fromFile(new File("/storage/emulated/0/DCIM/temp.pdf"))
+                .load();
+        onStartScreenRecording(null);
+    }
 
 
     class ViewPagerAdapter extends FragmentPagerAdapter {
