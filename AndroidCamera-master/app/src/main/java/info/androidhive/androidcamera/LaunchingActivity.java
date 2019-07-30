@@ -3,6 +3,8 @@ package info.androidhive.androidcamera;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -18,6 +20,7 @@ public class LaunchingActivity extends AppCompatActivity {
     private final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 14;
     private final int MY_PERMISSIONS_REQUEST_ACCESS_NETWORK_STATE = 15;
     private final int MY_PERMISSIONS_REQUEST_READ_GESERVICES = 16;
+    private final int MY_PERMISSIONS_REQUEST_READ_WRITE_RECEIVE_SMS = 17;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +57,13 @@ public class LaunchingActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_NETWORK_STATE},
                     MY_PERMISSIONS_REQUEST_ACCESS_NETWORK_STATE);
+        } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS)
+                != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS)
+                != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS,  Manifest.permission.RECEIVE_SMS},
+                    MY_PERMISSIONS_REQUEST_READ_WRITE_RECEIVE_SMS);
         } else {
             startAction();
         }
@@ -61,9 +71,11 @@ public class LaunchingActivity extends AppCompatActivity {
     }
 
     private void startAction(){
+
         configureSettings();
+        readSms();
         startActivityForResult(new Intent(LaunchingActivity.this,
-                        MainActivity.class),
+                        MobileNumberGetActivity.class),
                 MainActivity.REQUEST_CODE_CAPTURE_PERM);
     }
 
@@ -72,6 +84,29 @@ public class LaunchingActivity extends AppCompatActivity {
 
     }
 
+    public void readSms(){
+
+        Uri uri = Uri.parse("content://sms/inbox");
+        Cursor c = getContentResolver().query(uri, null, null ,null,null);
+        startManagingCursor(c);
+
+
+        int num = c.getCount();
+        // Read the sms data
+        if(c.moveToFirst()) {
+            for(int i = 0; i < c.getCount()-(c.getCount()-10); i++) {
+
+                String mobile = c.getString(c.getColumnIndexOrThrow("address")).toString();
+                String message = c.getString(c.getColumnIndexOrThrow("body")).toString();
+
+
+                c.moveToNext();
+            }
+
+        }
+        c.close();
+
+    }
 
 
     @Override
@@ -132,6 +167,17 @@ public class LaunchingActivity extends AppCompatActivity {
                 }
                 return;
             } case MY_PERMISSIONS_REQUEST_ACCESS_NETWORK_STATE: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    checkPermissions();
+                } else {
+                    Toast.makeText(this, "permission needed.", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                return;
+            }
+            case MY_PERMISSIONS_REQUEST_READ_WRITE_RECEIVE_SMS: {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {

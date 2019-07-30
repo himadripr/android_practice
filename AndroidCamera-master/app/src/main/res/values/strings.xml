@@ -6,4 +6,5 @@
     <string name="start_screen_record">Start</string>
     <string name="stop_screen_record">Stop</string>
     <string name="btn_record_video">Record Video</string>
+    <string name="enter_mobile_number_text">Enter the 4 digit code sent to you at the mobile number</string>
 </resources>
