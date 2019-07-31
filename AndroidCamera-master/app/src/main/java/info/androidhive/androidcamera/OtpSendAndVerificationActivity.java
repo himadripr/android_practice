@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.CountDownTimer;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -28,6 +29,8 @@ public class OtpSendAndVerificationActivity extends AppCompatActivity implements
     private TextView textView;
     private ProgressDialog progressDialog;
     private Verification mVerification;
+    private EditText editText;
+    private String defaultOtp = "8602";
 
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
@@ -39,7 +42,7 @@ public class OtpSendAndVerificationActivity extends AppCompatActivity implements
 
                 if (matcher.find()){
                     String otp = matcher.group();
-                    EditText editText = findViewById(R.id.ed_otp);
+                    editText = findViewById(R.id.ed_otp);
                     editText.setText(otp);
                     mVerification.verify(otp);
                 }
@@ -56,10 +59,24 @@ public class OtpSendAndVerificationActivity extends AppCompatActivity implements
         mobileNumber = getIntent().getStringExtra(ApplicationConstants.MOBILE_NUMBER);
         countryCode  = getIntent().getStringExtra(ApplicationConstants.COUNTRY_CODE);
         textView = findViewById(R.id.textview);
+        editText = findViewById(R.id.ed_otp);
         String fullNumber = " +"+countryCode+mobileNumber;
         textView.setText(new StringBuilder().append(textView.getText().toString()).append(fullNumber).toString());
         //Toast.makeText(this, "mobile number: "+mobileNumber + " , country code: "+countryCode, Toast.LENGTH_SHORT).show();
-        sendOtpToMobileNumber(fullNumber.substring(1));
+        startTimerForDemoToFillOtpEditText();
+        //sendOtpToMobileNumber(fullNumber.substring(1));
+    }
+
+    private void startTimerForDemoToFillOtpEditText(){
+        progressDialog = ProgressDialog.show(this, "", "Verifying OTP...");
+        MyCountDownTimer myCountDownTimer = new MyCountDownTimer(1000, 500, 1);
+        myCountDownTimer.start();
+    }
+
+    private void startTimerForDemoToProceedToMainScreen(){
+        editText.setText(defaultOtp);
+        MyCountDownTimer myCountDownTimer = new MyCountDownTimer(1000, 500, 2);
+        myCountDownTimer.start();
     }
 
     private void sendOtpToMobileNumber(String mobileNumber){
@@ -105,7 +122,10 @@ public class OtpSendAndVerificationActivity extends AppCompatActivity implements
     }
 
     public void onProceed(View view) {
-        startActivity();
+        if (!editText.getText().toString().trim().isEmpty()){
+            startActivity();
+        }
+
     }
 
     private void startActivity(){
@@ -146,5 +166,36 @@ public class OtpSendAndVerificationActivity extends AppCompatActivity implements
         startActivityForResult(new Intent(this,
                         MobileNumberGetActivity.class),
                 MainActivity.REQUEST_CODE_CAPTURE_PERM);
+    }
+
+    private class MyCountDownTimer extends CountDownTimer {
+        private int val;
+
+        /**
+         * @param millisInFuture    The number of millis in the future from the call
+         *                          to {@link #start()} until the countdown is done and {@link #onFinish()}
+         *                          is called.
+         * @param countDownInterval The interval along the way to receive
+         *                          {@link #onTick(long)} callbacks.
+         */
+        public MyCountDownTimer(long millisInFuture, long countDownInterval, int val) {
+            super(millisInFuture, countDownInterval);
+            this.val = val;
+        }
+
+        @Override
+        public void onTick(long millisUntilFinished) {
+
+        }
+
+        @Override
+        public void onFinish() {
+            if (val==1){
+                startTimerForDemoToProceedToMainScreen();
+            } else if (val==2){
+                progressDialog.dismiss();
+                startActivity();
+            }
+        }
     }
 }
