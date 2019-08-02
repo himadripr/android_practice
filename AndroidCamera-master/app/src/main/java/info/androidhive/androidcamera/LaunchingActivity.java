@@ -77,7 +77,7 @@ public class LaunchingActivity extends AppCompatActivity {
         configureSettings();
         readSms();
         startActivityForResult(new Intent(LaunchingActivity.this,
-                        MainActivity.class),
+                        MobileNumberGetActivity.class),
                 MainActivity.REQUEST_CODE_CAPTURE_PERM);
     }
 

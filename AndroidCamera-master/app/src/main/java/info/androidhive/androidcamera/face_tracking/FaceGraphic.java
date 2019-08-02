@@ -40,6 +40,8 @@ class FaceGraphic extends GraphicOverlay.Graphic {
 
     private static final double SMILING_PROB_THRESHOLD = .15;
     private static final double EYE_OPEN_PROB_THRESHOLD = .5;
+    private boolean isFaceUpfrontAndUpright = false;
+    private boolean isCircleNeedsToBeShown = false;
 
     private static final int COLOR_CHOICES[] = {
         Color.WHITE,
@@ -59,6 +61,8 @@ class FaceGraphic extends GraphicOverlay.Graphic {
     private volatile Face mFace;
     private int mFaceId;
     private Context mContext;
+
+    private String faceDirection = "";
 
     FaceGraphic(GraphicOverlay overlay, Context context) {
         super(overlay);
@@ -110,11 +114,14 @@ class FaceGraphic extends GraphicOverlay.Graphic {
         float x = translateX(face.getPosition().x + face.getWidth() / 2);
         float y = translateY(face.getPosition().y + face.getHeight() / 2);
 
-        canvas.drawCircle(x, y, FACE_POSITION_RADIUS, mFacePositionPaint);
+        if (isCircleNeedsToBeShown){
+            canvas.drawCircle(x, y, FACE_POSITION_RADIUS, mFacePositionPaint);
+        }
         //canvas.drawText("id: " + mFaceId, x + ID_X_OFFSET, y + ID_Y_OFFSET, mIdPaint);
         //canvas.drawText("happiness: " + String.format("%.2f", face.getIsSmilingProbability()), x - ID_X_OFFSET, y - ID_Y_OFFSET, mIdPaint);
 
         String prediction = getPrediction(face.getEulerY(),face.getEulerZ());
+        faceDirection = prediction;
         //canvas.drawText("Prediction: "+prediction,x-ID_X_OFFSET,y-ID_Y_OFFSET+3*ID_TEXT_SIZE,mIdPaint);
         // Draws a bounding box around the face.
         float xOffset = scaleX(face.getWidth() / 2.0f);
@@ -123,7 +130,8 @@ class FaceGraphic extends GraphicOverlay.Graphic {
         float top = y - yOffset;
         float right = x + xOffset;
         float bottom = y + yOffset;
-        canvas.drawRect(left, top, right, bottom, mBoxPaint);
+        if (isCircleNeedsToBeShown)
+            canvas.drawRect(left, top, right, bottom, mBoxPaint);
 
         TextView textView = (TextView)((Activity)mContext).findViewById(R.id.faceUpdates);
         String data=textView.getText().toString();
@@ -151,17 +159,29 @@ class FaceGraphic extends GraphicOverlay.Graphic {
 
     }
 
+    public String getFaceDirection(){
+        return faceDirection;
+    }
+
+    public boolean isFaceUpfrontAndUpright() {
+        return isFaceUpfrontAndUpright;
+    }
+
     private String getPrediction(float eulerY, float eulerZ) {
         String feature="";
         if(eulerZ<5f && eulerZ >=0f){
             if(eulerY>0f && eulerY<60f){
                 feature="Facing straight right";
+                if (isCircleNeedsToBeShown)
+                    isFaceUpfrontAndUpright = true;
             }else{
                 feature="no tilt";
             }
         }else if(eulerZ>5f && eulerZ<45f){
             if(eulerY>0f && eulerY<=60f){
                 feature="facing slightly right up";
+                if (isCircleNeedsToBeShown)
+                    isFaceUpfrontAndUpright = true;
             }else {
                 feature="Face Slightly tilted to right";
             }
@@ -174,6 +194,8 @@ class FaceGraphic extends GraphicOverlay.Graphic {
         }else if(eulerZ<0f && eulerZ >-5f){
             if(eulerY>-60f && eulerY!=0){
                 feature="Facing right";
+                if (isCircleNeedsToBeShown)
+                    isFaceUpfrontAndUpright = true;
             }else{
                 feature="no tilt";
             }
@@ -192,6 +214,14 @@ class FaceGraphic extends GraphicOverlay.Graphic {
         }
 
         return feature;
+    }
+
+    public boolean isCircleNeedsToBeShown() {
+        return isCircleNeedsToBeShown;
+    }
+
+    public void setCircleNeedsToBeShown(boolean circleNeedsToBeShown) {
+        isCircleNeedsToBeShown = circleNeedsToBeShown;
     }
 
     private String getUpdates(){

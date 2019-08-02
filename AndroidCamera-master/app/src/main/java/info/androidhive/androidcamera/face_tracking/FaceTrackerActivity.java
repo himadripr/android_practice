@@ -6,6 +6,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
@@ -14,6 +15,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -25,15 +27,16 @@ import com.google.android.gms.vision.face.FaceDetector;
 
 import java.io.IOException;
 
+import info.androidhive.androidcamera.MainActivity;
 import info.androidhive.androidcamera.R;
 
 /**
  * Activity for the face tracker app.  This app detects faces with the rear facing camera, and draws
  * overlay graphics to indicate the position, size, and ID of each face.
  */
-public final class FaceTrackerActivity extends AppCompatActivity {
+public class FaceTrackerActivity extends AppCompatActivity {
     private static final String TAG = "FaceTracker";
-
+    private boolean imageCaptureFlag = false;
     private CameraSource mCameraSource = null;
 
     private CameraSourcePreview mPreview;
@@ -131,10 +134,16 @@ public final class FaceTrackerActivity extends AppCompatActivity {
 
         mCameraSource = new CameraSource.Builder(context, detector)
                 .setRequestedPreviewSize(1024, 720)
-                .setFacing(CameraSource.CAMERA_FACING_BACK)
-                .setRequestedFps(30.0f)
+                .setFacing(CameraSource.CAMERA_FACING_FRONT)
+                .setRequestedFps(15.0f)
                 .setAutoFocusEnabled(true)
                 .build();
+    }
+
+    private void startActivity(){
+        startActivityForResult(new Intent(this,
+                        MainActivity.class),
+                MainActivity.REQUEST_CODE_CAPTURE_PERM);
     }
 
     /**
@@ -154,6 +163,16 @@ public final class FaceTrackerActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         mPreview.stop();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == MainActivity.REQUEST_CODE_CAPTURE_PERM){
+            this.setResult(resultCode);
+
+        }
+        finish();
     }
 
     /**
@@ -246,6 +265,11 @@ public final class FaceTrackerActivity extends AppCompatActivity {
         }
     }
 
+    public void onScanButtonClick(View view) {
+        imageCaptureFlag = true;
+
+    }
+
     //==============================================================================================
     // Graphic Face Tracker
     //==============================================================================================
@@ -280,6 +304,7 @@ public final class FaceTrackerActivity extends AppCompatActivity {
         @Override
         public void onNewItem(int faceId, Face item) {
             mFaceGraphic.setId(faceId);
+
         }
 
         /**
@@ -289,6 +314,12 @@ public final class FaceTrackerActivity extends AppCompatActivity {
         public void onUpdate(FaceDetector.Detections<Face> detectionResults, Face face) {
             mOverlay.add(mFaceGraphic);
             mFaceGraphic.updateFace(face);
+            if (imageCaptureFlag){
+                mFaceGraphic.setCircleNeedsToBeShown(true);
+                if (mFaceGraphic.isFaceUpfrontAndUpright()) {
+                    startActivity();
+                }
+            }
 
         }
 

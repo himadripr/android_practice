@@ -17,6 +17,7 @@ package info.androidhive.androidcamera.face_tracking;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -181,6 +182,12 @@ public class GraphicOverlay extends View {
                 mHeightScaleFactor = (float) canvas.getHeight() / (float) mPreviewHeight;
             }
 
+            Paint backgroundPaint = new Paint();
+            backgroundPaint.setStyle( Paint.Style.FILL );
+//                backgroundPaint.setARGB( 100, 255, 255, 255 );
+//                backgroundPaint.setARGB( 255, 255, 255, 255 );
+            backgroundPaint.setARGB( 150, 255, 255, 255 );
+            //canvas.drawRect( 0, 0, canvas.getWidth(), canvas.getHeight(), backgroundPaint );
             for (Graphic graphic : mGraphics) {
                 graphic.draw(canvas);
             }

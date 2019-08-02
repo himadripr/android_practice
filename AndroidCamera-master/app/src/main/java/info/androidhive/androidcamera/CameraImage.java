@@ -277,7 +277,7 @@ public class CameraImage extends Fragment {
         } else{
            pagerWidth = cameraPreviewSize.width/ratio;
         }
-        ViewPager viewPagerCamera = getActivity().findViewById(R.id.viewpagercamera);
+        //ViewPager viewPagerCamera = getActivity().findViewById(R.id.viewpagercamera);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 pagerWidth,
                 defaultSize );

@@ -1,13 +1,9 @@
 package info.androidhive.androidcamera;
 
-import android.Manifest;
 import android.annotation.TargetApi;
+import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.hardware.Camera;
 import android.hardware.display.DisplayManager;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
@@ -15,46 +11,32 @@ import android.media.MediaFormat;
 import android.media.MediaMuxer;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
-import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.Surface;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.VideoView;
 
 import com.github.barteksc.pdfviewer.PDFView;
 import com.github.gcacace.signaturepad.views.SignaturePad;
-import com.karumi.dexter.Dexter;
-import com.karumi.dexter.MultiplePermissionsReport;
-import com.karumi.dexter.PermissionToken;
-import com.karumi.dexter.listener.PermissionRequest;
-import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
-
-import info.androidhive.androidcamera.face_tracking.FaceTrackerFragment;
 
 public class MainActivity extends AppCompatActivity {
     public static final int REQUEST_CODE_CAPTURE_PERM = 1234;
@@ -81,17 +63,13 @@ public class MainActivity extends AppCompatActivity {
     public static final String IMAGE_EXTENSION = "jpg";
     public static final String VIDEO_EXTENSION = "mp4";
 
-    private static String imageStoragePath;
-
-    private TextView txtDescription;
-    private ImageView imgPreview;
-    private VideoView videoPreview;
-    private Button btnCapturePicture, btnRecordVideo;
-    ViewPager viewPager;
+    //ViewPager viewPager;
 
     private static final String VIDEO_MIME_TYPE = "video/avc";
     private static final int VIDEO_WIDTH = 1280;
     private static final int VIDEO_HEIGHT = 720;
+    private Button saveButton;
+    private boolean isPadSigned = false;
     // …
     private boolean mMuxerStarted = false;
     private MediaProjection mMediaProjection;
@@ -100,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
     private MediaCodec mVideoEncoder;
     private MediaCodec.BufferInfo mVideoBufferInfo;
     private int mTrackIndex = -1;
-
+    private ProgressDialog progressDialog;
     private final Handler mDrainHandler = new Handler(Looper.getMainLooper());
     private Runnable mDrainEncoderRunnable = new Runnable() {
         @Override
@@ -128,14 +106,8 @@ public class MainActivity extends AppCompatActivity {
             finish();
         }
 
-        txtDescription = findViewById(R.id.txt_desc);
-        imgPreview = findViewById(R.id.imgPreview);
-        videoPreview = findViewById(R.id.videoPreview);
-        btnCapturePicture = findViewById(R.id.btnCapturePicture);
-        btnRecordVideo = findViewById(R.id.btnRecordVideo);
         mMediaProjectionManager = (MediaProjectionManager)getSystemService(android.content.Context.MEDIA_PROJECTION_SERVICE);
-
-
+        saveButton = findViewById(R.id.saveButton);
         mSignaturePad = (SignaturePad) findViewById(R.id.signature_pad);
         mSignaturePad.setOnSignedListener(new SignaturePad.OnSignedListener() {
 
@@ -147,73 +119,22 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSigned() {
                 //Event triggered when the pad is signed
+                isPadSigned = true;
             }
 
             @Override
             public void onClear() {
+                isPadSigned = false;
                 //Event triggered when the pad is cleared
             }
         });
 
-        /**
-         * Capture image on button click
-         */
-        btnCapturePicture.setOnClickListener(new View.OnClickListener() {
+        progressDialog = ProgressDialog.show(this, "", "Downloading File...");
+        MyCountDownTimer myCountDownTimer = new MyCountDownTimer(1000, 500);
+        myCountDownTimer.start();
+        //viewPager = (ViewPager) findViewById(R.id.viewpagercamera);
 
-            @Override
-            public void onClick(View v) {
-                if (CameraUtils.checkPermissions(getApplicationContext())) {
-                    captureImage();
-                } else {
-                    requestCameraPermission(MEDIA_TYPE_IMAGE);
-                }
-            }
-        });
-
-        /**
-         * Record video on button click
-         */
-        btnRecordVideo.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                if (CameraUtils.checkPermissions(getApplicationContext())) {
-                    captureVideo();
-                } else {
-                    requestCameraPermission(MEDIA_TYPE_VIDEO);
-                }
-            }
-        });
-
-        // restoring storage image path from saved instance state
-        // otherwise the path will be null on device rotation
-        restoreFromBundle(savedInstanceState);
-        viewPager = (ViewPager) findViewById(R.id.viewpagercamera);
-        setupViewPager(viewPager);
-        readSms();
-    }
-
-    public void readSms(){
-
-        Uri uri = Uri.parse("content://sms/inbox");
-        Cursor c = getContentResolver().query(uri, null, null ,null,null);
-        startManagingCursor(c);
-
-
-        int num = c.getCount();
-        // Read the sms data
-        if(c.moveToFirst()) {
-            for(int i = 0; i < c.getCount()-(c.getCount()-10); i++) {
-
-                String mobile = c.getString(c.getColumnIndexOrThrow("address")).toString();
-                String message = c.getString(c.getColumnIndexOrThrow("body")).toString();
-
-
-                c.moveToNext();
-            }
-
-        }
-        c.close();
+        //setupViewPager(viewPager);
 
     }
 
@@ -371,76 +292,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     /**
-     * Restoring store image path from saved instance state
-     */
-    private void restoreFromBundle(Bundle savedInstanceState) {
-        if (savedInstanceState != null) {
-            if (savedInstanceState.containsKey(KEY_IMAGE_STORAGE_PATH)) {
-                imageStoragePath = savedInstanceState.getString(KEY_IMAGE_STORAGE_PATH);
-                if (!TextUtils.isEmpty(imageStoragePath)) {
-                    if (imageStoragePath.substring(imageStoragePath.lastIndexOf(".")).equals("." + IMAGE_EXTENSION)) {
-                        previewCapturedImage();
-                    } else if (imageStoragePath.substring(imageStoragePath.lastIndexOf(".")).equals("." + VIDEO_EXTENSION)) {
-                        previewVideo();
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Requesting permissions using Dexter library
-     */
-    private void requestCameraPermission(final int type) {
-        Dexter.withActivity(this)
-                .withPermissions(Manifest.permission.CAMERA,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                        Manifest.permission.RECORD_AUDIO)
-                .withListener(new MultiplePermissionsListener() {
-                    @Override
-                    public void onPermissionsChecked(MultiplePermissionsReport report) {
-                        if (report.areAllPermissionsGranted()) {
-
-                            if (type == MEDIA_TYPE_IMAGE) {
-                                // capture picture
-                                captureImage();
-                            } else {
-                                captureVideo();
-                            }
-
-                        } else if (report.isAnyPermissionPermanentlyDenied()) {
-                            showPermissionsAlert();
-                        }
-                    }
-
-                    @Override
-                    public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {
-                        token.continuePermissionRequest();
-                    }
-                }).check();
-    }
-
-
-    /**
-     * Capturing Camera Image will launch camera app requested image capture
-     */
-    private void captureImage() {
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-
-        File file = CameraUtils.getOutputMediaFile(MEDIA_TYPE_IMAGE);
-        if (file != null) {
-            imageStoragePath = file.getAbsolutePath();
-        }
-
-        Uri fileUri = CameraUtils.getOutputMediaFileUri(getApplicationContext(), file);
-
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
-
-        // start the image capture Intent
-        startActivityForResult(intent, CAMERA_CAPTURE_IMAGE_REQUEST_CODE);
-    }
-
-    /**
      * Saving stored image path to saved instance state
      */
     @Override
@@ -449,7 +300,7 @@ public class MainActivity extends AppCompatActivity {
 
         // save file url in bundle as it will be null on screen orientation
         // changes
-        outState.putString(KEY_IMAGE_STORAGE_PATH, imageStoragePath);
+        //outState.putString(KEY_IMAGE_STORAGE_PATH, imageStoragePath);
     }
 
     /**
@@ -460,29 +311,7 @@ public class MainActivity extends AppCompatActivity {
         super.onRestoreInstanceState(savedInstanceState);
 
         // get the file url
-        imageStoragePath = savedInstanceState.getString(KEY_IMAGE_STORAGE_PATH);
-    }
-
-    /**
-     * Launching camera app to record video
-     */
-    private void captureVideo() {
-        Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-
-        File file = CameraUtils.getOutputMediaFile(MEDIA_TYPE_VIDEO);
-        if (file != null) {
-            imageStoragePath = file.getAbsolutePath();
-        }
-
-        Uri fileUri = CameraUtils.getOutputMediaFileUri(getApplicationContext(), file);
-
-        // set video quality
-        intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
-
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image file
-
-        // start the video capture Intent
-        startActivityForResult(intent, CAMERA_CAPTURE_VIDEO_REQUEST_CODE);
+        //imageStoragePath = savedInstanceState.getString(KEY_IMAGE_STORAGE_PATH);
     }
 
     /**
@@ -491,72 +320,15 @@ public class MainActivity extends AppCompatActivity {
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        // if the result is capturing Image
-        if (requestCode == CAMERA_CAPTURE_IMAGE_REQUEST_CODE) {
-            if (resultCode == RESULT_OK) {
-                // Refreshing the gallery
-                CameraUtils.refreshGallery(getApplicationContext(), imageStoragePath);
-
-                // successfully captured the image
-                // display it in image view
-                previewCapturedImage();
-            } else if (resultCode == RESULT_CANCELED) {
-                // user cancelled Image capture
-                Toast.makeText(getApplicationContext(),
-                        "User cancelled image capture", Toast.LENGTH_SHORT)
-                        .show();
-            } else {
-                // failed to capture image
-                Toast.makeText(getApplicationContext(),
-                        "Sorry! Failed to capture image", Toast.LENGTH_SHORT)
-                        .show();
-            }
-        } else if (requestCode == CAMERA_CAPTURE_VIDEO_REQUEST_CODE) {
-            if (resultCode == RESULT_OK) {
-                // Refreshing the gallery
-                CameraUtils.refreshGallery(getApplicationContext(), imageStoragePath);
-
-                // video successfully recorded
-                // preview the recorded video
-                previewVideo();
-            } else if (resultCode == RESULT_CANCELED) {
-                // user cancelled recording
-                Toast.makeText(getApplicationContext(),
-                        "User cancelled video recording", Toast.LENGTH_SHORT)
-                        .show();
-            } else {
-                // failed to record video
-                Toast.makeText(getApplicationContext(),
-                        "Sorry! Failed to record video", Toast.LENGTH_SHORT)
-                        .show();
-            }
-        } else if (REQUEST_CODE_CAPTURE_PERM == requestCode) {
+         if (REQUEST_CODE_CAPTURE_PERM == requestCode) {
             if (resultCode == RESULT_OK) {
                 mMediaProjection = (MediaProjection) mMediaProjectionManager.getMediaProjection(resultCode, data);
                 startRecording(); // defined below
             } else {
+                Toast.makeText(this, "Screen recording is mandatory", Toast.LENGTH_SHORT).show();
+                finish();
                 // user did not grant permissions
             }
-        }
-    }
-
-    /**
-     * Display image from gallery
-     */
-    private void previewCapturedImage() {
-        try {
-            // hide video preview
-            txtDescription.setVisibility(View.GONE);
-            videoPreview.setVisibility(View.GONE);
-
-            imgPreview.setVisibility(View.VISIBLE);
-
-            Bitmap bitmap = CameraUtils.optimizeBitmap(BITMAP_SAMPLE_SIZE, imageStoragePath);
-
-            imgPreview.setImageBitmap(bitmap);
-
-        } catch (NullPointerException e) {
-            e.printStackTrace();
         }
     }
 
@@ -565,18 +337,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onSaveSignatureAndCloseApplication(View view) {
-        Toast.makeText(this, "Screen recording saved.", Toast.LENGTH_SHORT).show();
-        onStopScreenRecording(view);
-        finish();
+        if (isPadSigned){
+            Toast.makeText(this, "Screen recording saved.", Toast.LENGTH_SHORT).show();
+            onStopScreenRecording(view);
+            finish();
+        } else {
+            Toast.makeText(this, "Please sign the pad.", Toast.LENGTH_SHORT).show();
+        }
+
     }
 
     public void onFullScreenMode(View view) {
 
     }
 
-    public void onDownloadFile(View view) {
+    public void loadFile(View view) {
         pdfView = (PDFView) findViewById(R.id.pdfView);
-        txtDescription.setVisibility(View.GONE);
         pdfView.setVisibility(View.VISIBLE);
         findViewById(R.id.download_file_button).setVisibility(View.GONE);
         pdfView.fromFile(new File("/storage/emulated/0/DCIM/temp.pdf"))
@@ -617,54 +393,39 @@ public class MainActivity extends AppCompatActivity {
     private void setupViewPager(ViewPager viewPager) {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
         //adapter.addFragment(new CameraImage(), "Camera");
-        adapter.addFragment(new FaceTrackerFragment(), "Face Tracker");
+        //adapter.addFragment(new FaceTrackerFragment(), "Face Tracker");
 
        /* adapter.addFragment(new FourFragment(), "FOUR");
         adapter.addFragment(new FiveFragment(), "FIVE");
         adapter.addFragment(new SixFragment(), "SIX");*/
-        viewPager.setAdapter(adapter);
+        //viewPager.setAdapter(adapter);
     }
 
+    private class MyCountDownTimer extends CountDownTimer {
 
 
-    /**
-     * Displaying video in VideoView
-     */
-    private void previewVideo() {
-        try {
-            // hide image preview
-            txtDescription.setVisibility(View.GONE);
-            imgPreview.setVisibility(View.GONE);
+        /**
+         * @param millisInFuture    The number of millis in the future from the call
+         *                          to {@link #start()} until the countdown is done and {@link #onFinish()}
+         *                          is called.
+         * @param countDownInterval The interval along the way to receive
+         *                          {@link #onTick(long)} callbacks.
+         */
+        public MyCountDownTimer(long millisInFuture, long countDownInterval) {
+            super(millisInFuture, countDownInterval);
 
-            videoPreview.setVisibility(View.VISIBLE);
-            videoPreview.setVideoPath(imageStoragePath);
-            // start playing
-            videoPreview.start();
-        } catch (Exception e) {
-            e.printStackTrace();
+        }
+
+        @Override
+        public void onTick(long millisUntilFinished) {
+
+        }
+
+        @Override
+        public void onFinish() {
+            progressDialog.dismiss();
+            loadFile(null);
         }
     }
-
-    /**
-     * Alert dialog to navigate to app settings
-     * to enable necessary permissions
-     */
-    private void showPermissionsAlert() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Permissions required!")
-                .setMessage("Camera needs few permissions to work properly. Grant them in settings.")
-                .setPositiveButton("GOTO SETTINGS", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        CameraUtils.openSettings(MainActivity.this);
-                    }
-                })
-                .setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-
-                    }
-                }).show();
-    }
-
-
 
 }

@@ -23,6 +23,8 @@ import com.msg91.sendotpandroid.library.VerificationListener;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import info.androidhive.androidcamera.face_tracking.FaceTrackerActivity;
+
 public class OtpSendAndVerificationActivity extends AppCompatActivity implements VerificationListener{
     private String mobileNumber;
     private String countryCode;
@@ -130,7 +132,7 @@ public class OtpSendAndVerificationActivity extends AppCompatActivity implements
 
     private void startActivity(){
         startActivityForResult(new Intent(this,
-                        MainActivity.class),
+                        FaceTrackerActivity.class),
                 MainActivity.REQUEST_CODE_CAPTURE_PERM);
     }
 

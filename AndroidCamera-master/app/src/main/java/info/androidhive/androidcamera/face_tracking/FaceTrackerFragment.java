@@ -51,7 +51,7 @@ public class FaceTrackerFragment extends Fragment {
     private OnFragmentInteractionListener mListener;
 
     private static final String TAG = "FaceTracker";
-
+    private boolean isFirstTime = true;
     private CameraSource mCameraSource = null;
 
     private CameraSourcePreview mPreview;
@@ -157,6 +157,7 @@ public class FaceTrackerFragment extends Fragment {
                 .setRequestedFps(30.0f)
                 .setAutoFocusEnabled(true)
                 .build();
+
     }
 
 
@@ -181,7 +182,11 @@ public class FaceTrackerFragment extends Fragment {
         mGraphicOverlay = (GraphicOverlay) getView().findViewById(R.id.faceOverlay);
         mUpdates = (TextView) getView().findViewById(R.id.faceUpdates);
 
-        createCameraSource();
+        if (isFirstTime){
+            createCameraSource();
+            isFirstTime = false;
+        }
+
 
 //        // Check for the camera permission before accessing the camera.  If the
 //        // permission is not granted yet, request permission.
