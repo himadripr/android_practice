@@ -4,7 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
+    android:background="@color/backgroundgrey"
     android:padding="@dimen/activity_margin"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context=".MainActivity"
@@ -14,52 +16,28 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:orientation="horizontal"
-        android:weightSum="2"
+        android:weightSum="4"
+        android:visibility="gone"
         android:layout_height="wrap_content">
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:gravity="center"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            >
 
-            <android.support.v4.view.ViewPager
-                android:id="@+id/viewpagercamera"
-                android:layout_gravity="center"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                app:layout_behavior="@string/appbar_scrolling_view_behavior"  />
-
-        </LinearLayout>
 
 
         <LinearLayout
             android:layout_width="0dp"
-            android:layout_weight="1"
+            android:layout_weight="3"
             android:gravity="center"
             android:layout_height="match_parent"
-            android:orientation="vertical"
+            android:orientation="horizontal"
             >
 
+
             <Button
-                android:layout_width="150dp"
-                android:id="@+id/download_file_button"
+                android:layout_width="wrap_content"
                 android:layout_height="40dp"
-                android:background="@drawable/button_solid_background"
-                android:foreground="?attr/selectableItemBackground"
-                android:text="Download  File"
-                android:textAllCaps="false"
-                android:onClick="onDownloadFile"
-                android:layout_weight="1"
-                android:textColor="@android:color/white"
-                />
-            <Button
-                android:layout_width="150dp"
-                android:layout_height="40dp"
-                android:layout_weight="1"
+                android:padding="10dp"
                 android:onClick="onFullScreenMode"
-                android:layout_marginTop="5dp"
+                android:layout_marginLeft="5dp"
                 android:background="@drawable/button_bordered_background"
                 android:foreground="?attr/selectableItemBackground"
                 android:text="Full Screen Mode"
@@ -72,48 +50,73 @@
     </LinearLayout>
 
 
-
-
-
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginBottom="@dimen/activity_margin"
+        android:layout_height="0dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
         android:layout_weight="1"
         android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/txt_desc"
-            android:layout_width="fill_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:padding="10dp"
-            android:visibility="visible"
-            android:text="@string/preview_description"
-            android:textSize="15dp" />
-
-        <!-- To display picture taken -->
-        <ImageView
-            android:id="@+id/imgPreview"
+        <android.support.v7.widget.CardView
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="centerCrop"
-            android:visibility="gone" />
+            android:layout_gravity="center"
+            android:background="@android:color/white"
+            android:elevation="3dp"
+            card_view:cardCornerRadius="5dp"
+            android:layout_height="match_parent">
 
-        <!-- To preview video recorded -->
-        <VideoView
-            android:id="@+id/videoPreview"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_gravity="center_horizontal"
-            android:visibility="gone" />
+            <TextView
+                android:id="@+id/txt_desc"
+                android:layout_width="fill_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:padding="10dp"
+                android:visibility="gone"
+                android:text="@string/preview_description"
+                android:textSize="15dp" />
 
-        <com.github.barteksc.pdfviewer.PDFView
-            android:id="@+id/pdfView"
-            android:visibility="gone"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            <Button
+                android:layout_width="wrap_content"
+                android:id="@+id/download_file_button"
+                android:padding="10dp"
+                android:layout_gravity="center"
+                android:layout_height="40dp"
+                android:background="@drawable/button_solid_background"
+                android:foreground="?attr/selectableItemBackground"
+                android:text="Download  File"
+                android:textAllCaps="false"
+                android:onClick="onDownloadFile"
+
+                android:textColor="@android:color/white"
+                />
+
+            <!-- To display picture taken -->
+            <ImageView
+                android:id="@+id/imgPreview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:visibility="gone" />
+
+            <!-- To preview video recorded -->
+            <VideoView
+                android:id="@+id/videoPreview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_horizontal"
+                android:visibility="gone" />
+
+            <com.github.barteksc.pdfviewer.PDFView
+                android:id="@+id/pdfView"
+                android:visibility="gone"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+        </android.support.v7.widget.CardView>
+
+
     </LinearLayout>
+
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -179,6 +182,7 @@
         android:layout_width="wrap_content"
         android:text="By signing below you are verifying the document"
         android:textStyle="bold"
+        android:textSize="10sp"
         android:textColor="@android:color/black"
         android:layout_height="wrap_content" />
 
@@ -196,38 +200,62 @@
             android:layout_marginRight="5dp"
             android:background="@drawable/sign_pad_background"
             android:layout_width="0dp"
-            android:layout_height="100dp"
+            android:layout_height="125dp"
             app:penColor="@android:color/holo_blue_dark"
             />
 
         <LinearLayout
             android:layout_width="0dp"
             android:orientation="vertical"
+            android:weightSum="3"
+            android:layout_gravity="center"
+            android:gravity="center"
             android:layout_weight="2"
             android:layout_height="match_parent">
 
             <Button
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:layout_height="30dp"
+
                 android:background="@drawable/button_solid_background"
                 android:foreground="?attr/selectableItemBackground"
                 android:text="Save"
-
+                android:textAllCaps="false"
+                android:textSize="12sp"
                 android:onClick="onSaveSignatureAndCloseApplication"
                 android:layout_weight="1"
                 android:textColor="@android:color/white"
                 />
             <Button
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:layout_height="30dp"
                 android:layout_weight="1"
+                android:textSize="12sp"
                 android:layout_marginTop="5dp"
                 android:background="@drawable/button_bordered_background"
                 android:foreground="?attr/selectableItemBackground"
                 android:text="Reset"
+                android:textAllCaps="false"
                 android:onClick="onResetSignaturePad"
                 android:textColor="@android:color/black"
                 />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:gravity="center"
+                android:layout_marginTop="5dp"
+                android:layout_height="wrap_content"
+
+                >
+
+                <android.support.v4.view.ViewPager
+                    android:id="@+id/viewpagercamera"
+                    android:layout_gravity="center"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    app:layout_behavior="@string/appbar_scrolling_view_behavior"  />
+
+            </LinearLayout>
 
         </LinearLayout>
 

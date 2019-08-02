@@ -7,4 +7,12 @@
     <string name="stop_screen_record">Stop</string>
     <string name="btn_record_video">Record Video</string>
     <string name="enter_mobile_number_text">Enter the 4 digit code sent to you at the mobile number</string>
+    <string name="ok">OK</string>
+    <string name="permission_camera_rationale">Access to the camera is needed for detection</string>
+    <string name="no_camera_permission">This application cannot run because it does not have the camera permission.  The application will now exit.</string>
+    <string name="low_storage_error">Face detector dependencies cannot be downloaded due to low device storage</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
 </resources>

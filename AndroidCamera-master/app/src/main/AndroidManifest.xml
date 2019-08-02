@@ -14,23 +14,32 @@
 
     <uses-feature
         android:name="android.hardware.camera"
-        android:required="false" />
+        android:required="true" />
 
-    <application
+    <application xmlns:tools="http://schemas.android.com/tools"
         android:allowBackup="true"
+        android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+        <meta-data
             android:name="sendotp.key"
             android:value="210227AlvCBUw1rDj5ad434ec" />
+        <meta-data
+            android:name="com.google.firebase.ml.vision.DEPENDENCIES"
+            android:value="face" />
+        <!-- To use multiple models: android:value="face,model2,model3" -->
 
         <activity
             android:name=".MainActivity"
+
             android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/Theme.AppCompat.NoActionBar.FullScreen" />
 
         <provider
             android:name="android.support.v4.content.FileProvider"
@@ -59,7 +68,10 @@
         </activity>
         <activity android:name=".OtpSendAndVerificationActivity" />
         <activity android:name=".MobileNumberGetActivity" />
-        <activity android:name=".CameraActivity"></activity>
+        <activity android:name=".face_tracking.FaceTrackerActivity"
+            android:screenOrientation="nosensor">
+
+        </activity>
     </application>
 
 </manifest>

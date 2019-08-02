@@ -30,8 +30,10 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 public class CameraImage extends Fragment {
@@ -93,6 +95,8 @@ public class CameraImage extends Fragment {
         camera = Camera.open(cameraId);
 
         resetWindowFrameAndCameraSettings();
+
+        doFaceDetection(camera);
     }
 
     public void resetWindowFrameAndCameraSettings() {
@@ -103,6 +107,7 @@ public class CameraImage extends Fragment {
     @Override
     public void onPause()
     {
+        stopFaceDetection(camera);
         handler.removeCallbacksAndMessages( null );
         clearRecognitionResults();
         stopPreviewAndReleaseCamera();
@@ -277,7 +282,7 @@ public class CameraImage extends Fragment {
                 pagerWidth,
                 defaultSize );
         params.gravity = Gravity.CENTER;
-        viewPagerCamera.setLayoutParams(params);
+        //viewPagerCamera.setLayoutParams(params);
         // Zoom
         parameters.setZoom( cameraZoom );
 
@@ -544,5 +549,72 @@ public class CameraImage extends Fragment {
         }
     }
 
+    private class MyFaceDetectionListener
+            implements Camera.FaceDetectionListener {
+        /**
+         * Notify the listener of the detected faces in the preview frame.
+         *
+         * @param faces  The detected faces in a list
+         * @param camera The {@link Camera} service object
+         */
+        @Override
+        public void onFaceDetection(Camera.Face[] faces, Camera camera) {
+
+            if (faces.length == 0) {
+                Toast.makeText(getActivity(), "Face NOT detected", Toast.LENGTH_SHORT).show();
+
+                //Toast.makeText(MainCaptureOneActivity.this, "No faces detected", Toast.LENGTH_SHORT).show();
+
+            } else if (faces.length > 0) {
+                Log.i("", "Faces Detected = " +
+                        String.valueOf(faces.length));
+                 Toast.makeText(getActivity(), faces.length+" faces detected", Toast.LENGTH_SHORT).show();
+
+                List<Rect> faceRects;
+//                faceRects = new ArrayList<Rect>();
+//                if (faces.length == 1) {
+//                    for (int i=0; i<faces.length; i++) {
+//                        int left = faces[i].rect.left;
+//                        int right = faces[i].rect.right;
+//                        int top = faces[i].rect.top;
+//                        int bottom = faces[i].rect.bottom;
+//                        Rect uRect = new Rect(left, top, right, bottom);
+//                        faceRects.add(uRect);
+//                        //new Rect(left, top, right, bottom)
+//
+//
+//                    }
+//                }
+
+                // add function to draw rects on view/surface/canvas
+            }
+        }
+    }
+
+    //private boolean faceDetectionRunning = false;
+
+    public int doFaceDetection(Camera mCamera) {
+
+
+        Camera.Parameters parameters = mCamera.getParameters();
+        // check if face detection is supported or not
+        // using Camera.Parameters
+        if (parameters.getMaxNumDetectedFaces() <= 0) {
+            Log.e("", "Face Detection not supported");
+            Toast.makeText(getActivity(), "Face Detection not supported", Toast.LENGTH_SHORT).show();
+            return -1;
+        }
+
+        MyFaceDetectionListener fDListener = new MyFaceDetectionListener();
+        mCamera.setFaceDetectionListener(fDListener);
+        mCamera.startFaceDetection();
+
+        return 1;
+    }
+
+    public int stopFaceDetection(Camera mCamera) {
+        mCamera.stopFaceDetection();
+        return 0;
+    }
 
 }

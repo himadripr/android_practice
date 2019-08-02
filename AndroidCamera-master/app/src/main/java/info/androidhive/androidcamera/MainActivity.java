@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.hardware.Camera;
 import android.hardware.display.DisplayManager;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
@@ -32,6 +33,7 @@ import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.Surface;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -51,6 +53,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+
+import info.androidhive.androidcamera.face_tracking.FaceTrackerFragment;
 
 public class MainActivity extends AppCompatActivity {
     public static final int REQUEST_CODE_CAPTURE_PERM = 1234;
@@ -110,8 +114,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        //Toolbar toolbar = findViewById(R.id.toolbar);
+        //setSupportActionBar(toolbar);
 
         // Checking availability of the camera
         if (!CameraUtils.isDeviceSupportCamera(getApplicationContext())) {
@@ -572,6 +578,7 @@ public class MainActivity extends AppCompatActivity {
         pdfView = (PDFView) findViewById(R.id.pdfView);
         txtDescription.setVisibility(View.GONE);
         pdfView.setVisibility(View.VISIBLE);
+        findViewById(R.id.download_file_button).setVisibility(View.GONE);
         pdfView.fromFile(new File("/storage/emulated/0/DCIM/temp.pdf"))
                 .load();
         onStartScreenRecording(null);
@@ -609,8 +616,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupViewPager(ViewPager viewPager) {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
-        adapter.addFragment(new CameraImage(), "Camera");
-
+        //adapter.addFragment(new CameraImage(), "Camera");
+        adapter.addFragment(new FaceTrackerFragment(), "Face Tracker");
 
        /* adapter.addFragment(new FourFragment(), "FOUR");
         adapter.addFragment(new FiveFragment(), "FIVE");
@@ -638,8 +645,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-
     /**
      * Alert dialog to navigate to app settings
      * to enable necessary permissions
@@ -659,4 +664,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }).show();
     }
+
+
+
 }

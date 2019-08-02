@@ -11,6 +11,8 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
+import info.androidhive.androidcamera.face_tracking.FaceTrackerActivity;
+
 
 public class LaunchingActivity extends AppCompatActivity {
 
@@ -75,7 +77,7 @@ public class LaunchingActivity extends AppCompatActivity {
         configureSettings();
         readSms();
         startActivityForResult(new Intent(LaunchingActivity.this,
-                        MobileNumberGetActivity.class),
+                        MainActivity.class),
                 MainActivity.REQUEST_CODE_CAPTURE_PERM);
     }
 
