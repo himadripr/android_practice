@@ -8,6 +8,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.hardware.Camera;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -29,6 +32,7 @@ import java.io.IOException;
 
 import info.androidhive.androidcamera.MainActivity;
 import info.androidhive.androidcamera.R;
+import info.androidhive.androidcamera.utility.Utils;
 
 /**
  * Activity for the face tracker app.  This app detects faces with the rear facing camera, and draws
@@ -144,6 +148,18 @@ public class FaceTrackerActivity extends AppCompatActivity {
         startActivityForResult(new Intent(this,
                         MainActivity.class),
                 MainActivity.REQUEST_CODE_CAPTURE_PERM);
+    }
+
+    private void captureImage(){
+        mCameraSource.takePicture(null, new CameraSource.PictureCallback() {
+            @Override
+            public void onPictureTaken(byte[] bytes) {
+                Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                Bitmap bitmapCaptured = bmp.copy(Bitmap.Config.ARGB_8888, true);
+                Utils.storeImage(bitmapCaptured, getApplicationContext());
+                startActivity();
+            }
+        });
     }
 
     /**
@@ -317,7 +333,7 @@ public class FaceTrackerActivity extends AppCompatActivity {
             if (imageCaptureFlag){
                 mFaceGraphic.setCircleNeedsToBeShown(true);
                 if (mFaceGraphic.isFaceUpfrontAndUpright()) {
-                    startActivity();
+                    captureImage();
                 }
             }
 
