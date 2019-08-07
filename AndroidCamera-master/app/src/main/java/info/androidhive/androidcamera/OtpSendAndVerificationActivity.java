@@ -20,6 +20,7 @@ import com.msg91.sendotpandroid.library.SendOtpVerification;
 import com.msg91.sendotpandroid.library.Verification;
 import com.msg91.sendotpandroid.library.VerificationListener;
 
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,8 +32,8 @@ public class OtpSendAndVerificationActivity extends AppCompatActivity implements
     private TextView textView;
     private ProgressDialog progressDialog;
     private Verification mVerification;
-    private EditText editText;
-    private String defaultOtp = "8602";
+    //private EditText edOtp;
+    //private String defaultOtp = "8602";
 
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
@@ -44,8 +45,9 @@ public class OtpSendAndVerificationActivity extends AppCompatActivity implements
 
                 if (matcher.find()){
                     String otp = matcher.group();
-                    editText = findViewById(R.id.ed_otp);
-                    editText.setText(otp);
+                    //edOtp = findViewById(R.id.ed_otp);
+                    //edOtp.setText(otp);
+                    processAndDisplayOtp(otp);
                     mVerification.verify(otp);
                 }
 
@@ -54,6 +56,29 @@ public class OtpSendAndVerificationActivity extends AppCompatActivity implements
         }
     };
 
+
+    private void processAndDisplayOtp(String otp){
+        Integer otpn = Integer.parseInt(otp);
+        int dig = otpn%10;
+        EditText ed = (EditText)findViewById(R.id.ed_otp4);
+        ed.setText(String.valueOf(dig));
+
+        otpn/=10;
+        dig = otpn%10;
+        ed = (EditText)findViewById(R.id.ed_otp3);
+        ed.setText(String.valueOf(dig));
+
+        otpn/=10;
+        dig = otpn%10;
+        ed = (EditText)findViewById(R.id.ed_otp2);
+        ed.setText(String.valueOf(dig));
+
+        otpn/=10;
+        dig = otpn%10;
+        ed = (EditText)findViewById(R.id.ed_otp1);
+        ed.setText(String.valueOf(dig));
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,7 +86,7 @@ public class OtpSendAndVerificationActivity extends AppCompatActivity implements
         mobileNumber = getIntent().getStringExtra(ApplicationConstants.MOBILE_NUMBER);
         countryCode  = getIntent().getStringExtra(ApplicationConstants.COUNTRY_CODE);
         textView = findViewById(R.id.textview);
-        editText = findViewById(R.id.ed_otp);
+        //edOtp = findViewById(R.id.ed_otp);
         String fullNumber = " +"+countryCode+mobileNumber;
         textView.setText(new StringBuilder().append(textView.getText().toString()).append(fullNumber).toString());
         //Toast.makeText(this, "mobile number: "+mobileNumber + " , country code: "+countryCode, Toast.LENGTH_SHORT).show();
@@ -75,8 +100,16 @@ public class OtpSendAndVerificationActivity extends AppCompatActivity implements
         myCountDownTimer.start();
     }
 
+    private String getRandomOtp(){
+        Random random = new Random();
+        String otp = String.format("%04d", random.nextInt(10000));
+
+        return otp;
+    }
+
     private void startTimerForDemoToProceedToMainScreen(){
-        editText.setText(defaultOtp);
+        processAndDisplayOtp(getRandomOtp());
+        //edOtp.setText(getRandomOtp());
         MyCountDownTimer myCountDownTimer = new MyCountDownTimer(1000, 500, 2);
         myCountDownTimer.start();
     }
@@ -124,17 +157,25 @@ public class OtpSendAndVerificationActivity extends AppCompatActivity implements
     }
 
     public void onProceed(View view) {
-        if (!editText.getText().toString().trim().isEmpty()){
-            startActivity();
-        }
+//        if (!edOtp.getText().toString().trim().isEmpty()){
+//            startActivity();
+//        }
 
     }
 
     private void startActivity(){
-        startActivityForResult(new Intent(this,
-                        FaceTrackerActivity.class),
-                MainActivity.REQUEST_CODE_CAPTURE_PERM);
+        Intent intent = new Intent(this, FaceTrackerActivity.class);
+        intent.putExtra(ApplicationConstants.COUNTRY_CODE, getIntent().getStringExtra(ApplicationConstants.COUNTRY_CODE));
+        intent.putExtra(ApplicationConstants.MOBILE_NUMBER, getIntent().getStringExtra(ApplicationConstants.MOBILE_NUMBER));
+        startActivityForResult(intent, MainActivity.REQUEST_CODE_CAPTURE_PERM);
     }
+
+//    private void startActivity(){
+//
+//        startActivityForResult(new Intent(this,
+//                        FaceTrackerActivity.class),
+//                MainActivity.REQUEST_CODE_CAPTURE_PERM);
+//    }
 
     /**
      *

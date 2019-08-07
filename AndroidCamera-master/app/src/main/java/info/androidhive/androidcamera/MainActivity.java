@@ -22,6 +22,7 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Display;
 import android.view.Surface;
 import android.view.View;
@@ -29,14 +30,36 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.HurlStack;
+import com.android.volley.toolbox.Volley;
 import com.github.barteksc.pdfviewer.PDFView;
 import com.github.gcacace.signaturepad.views.SignaturePad;
+import com.google.gson.JsonObject;
+import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.ion.Ion;
+
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+
+
+import info.androidhive.androidcamera.utility.*;
+import info.androidhive.androidcamera.video_recording.Camera2VideoFragment;
 
 public class MainActivity extends AppCompatActivity {
     public static final int REQUEST_CODE_CAPTURE_PERM = 1234;
@@ -64,13 +87,14 @@ public class MainActivity extends AppCompatActivity {
     public static final String VIDEO_EXTENSION = "mp4";
 
     //ViewPager viewPager;
+    //Camera2VideoFragment camera2VideoFragment;
 
     private static final String VIDEO_MIME_TYPE = "video/avc";
     private static final int VIDEO_WIDTH = 1280;
     private static final int VIDEO_HEIGHT = 720;
     private Button saveButton;
     private boolean isPadSigned = false;
-    // …
+    //
     private boolean mMuxerStarted = false;
     private MediaProjection mMediaProjection;
     private Surface mInputSurface;
@@ -129,12 +153,62 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        progressDialog = ProgressDialog.show(this, "", "Downloading File...");
-        MyCountDownTimer myCountDownTimer = new MyCountDownTimer(1000, 500);
-        myCountDownTimer.start();
+        downloadFileForTheGivenMobileNumber();
         //viewPager = (ViewPager) findViewById(R.id.viewpagercamera);
+        //camera2VideoFragment = Camera2VideoFragment.newInstance();
 
         //setupViewPager(viewPager);
+
+    }
+
+    private void downloadFileForTheGivenMobileNumber(){
+        progressDialog = ProgressDialog.show(this, "", "Downloading File...");
+        //MyCountDownTimer myCountDownTimer = new MyCountDownTimer(1000, 500);
+        //myCountDownTimer.start();
+        String url = "http://192.168.0.3:8080/sheet-cutting-plan/webapi/getDocument/"+getIntent().getStringExtra(ApplicationConstants.COUNTRY_CODE)+"/"+
+            getIntent().getStringExtra(ApplicationConstants.MOBILE_NUMBER);
+//        HashMap<String, String> params = new HashMap<>();
+//        params.put("mobileNumber", getIntent().getStringExtra(ApplicationConstants.MOBILE_NUMBER));
+//        params.put("countryCode", getIntent().getStringExtra(ApplicationConstants.COUNTRY_CODE));
+        InputStreamVolleyRequest request = new InputStreamVolleyRequest(Request.Method.GET, url,
+                new Response.Listener<byte[]>() {
+                    @Override
+                    public void onResponse(byte[] response) {
+                        // TODO handle the response
+                        progressDialog.dismiss();
+                        try {
+                            if (response!=null) {
+
+                                FileOutputStream outputStream;
+                                String fileName = Utils.getRootPathOfApp(getApplicationContext());
+                                String timeStamp = String.valueOf(System.currentTimeMillis());
+                                String name = fileName+"/"+timeStamp+".pdf";
+                                File file = new File(name);
+                                file.createNewFile();
+                                outputStream = new FileOutputStream(file);
+                                outputStream.write(response);
+                                outputStream.close();
+                                Toast.makeText(MainActivity.this, "Download complete.", Toast.LENGTH_LONG).show();
+                                loadFile(file);
+                            }
+                        } catch (Exception e) {
+                            // TODO Auto-generated catch block
+                            Log.d("KEY_ERROR", "UNABLE TO DOWNLOAD FILE");
+                            progressDialog.dismiss();
+                            e.printStackTrace();
+                        }
+                    }
+                } ,new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                // TODO handle the error
+                progressDialog.dismiss();
+                error.printStackTrace();
+            }
+        }, null);
+        RequestQueue mRequestQueue = Volley.newRequestQueue(getApplicationContext(), new HurlStack());
+        mRequestQueue.add(request);
 
     }
 
@@ -151,7 +225,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private void startRecording() {
+    private void startScreenRecording() {
+
+
         DisplayManager dm = (DisplayManager)getSystemService(Context.DISPLAY_SERVICE);
         Display defaultDisplay = dm.getDisplay(Display.DEFAULT_DISPLAY);
         if (defaultDisplay == null) {
@@ -323,7 +399,9 @@ public class MainActivity extends AppCompatActivity {
          if (REQUEST_CODE_CAPTURE_PERM == requestCode) {
             if (resultCode == RESULT_OK) {
                 mMediaProjection = (MediaProjection) mMediaProjectionManager.getMediaProjection(resultCode, data);
-                startRecording(); // defined below
+                //camera2VideoFragment.startRecordingVideo();
+
+                startScreenRecording(); // defined below
             } else {
                 Toast.makeText(this, "Screen recording is mandatory", Toast.LENGTH_SHORT).show();
                 finish();
@@ -332,6 +410,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+
     public void onResetSignaturePad(View view) {
         mSignaturePad.clear();
     }
@@ -339,7 +419,9 @@ public class MainActivity extends AppCompatActivity {
     public void onSaveSignatureAndCloseApplication(View view) {
         if (isPadSigned){
             Toast.makeText(this, "Screen recording saved.", Toast.LENGTH_SHORT).show();
+            //camera2VideoFragment.stopRecordingVideo();
             onStopScreenRecording(view);
+//
             finish();
         } else {
             Toast.makeText(this, "Please sign the pad.", Toast.LENGTH_SHORT).show();
@@ -351,10 +433,21 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void loadFile(View view) {
+    public void loadFile(File file){
+
         pdfView = (PDFView) findViewById(R.id.pdfView);
         pdfView.setVisibility(View.VISIBLE);
         findViewById(R.id.download_file_button).setVisibility(View.GONE);
+        pdfView.fromFile(file).load();
+
+        onStartScreenRecording(null);
+    }
+
+    public void loadFile() {
+        pdfView = (PDFView) findViewById(R.id.pdfView);
+        pdfView.setVisibility(View.VISIBLE);
+        findViewById(R.id.download_file_button).setVisibility(View.GONE);
+
         pdfView.fromFile(new File("/storage/emulated/0/DCIM/temp.pdf"))
                 .load();
         onStartScreenRecording(null);
@@ -392,13 +485,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupViewPager(ViewPager viewPager) {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
-        //adapter.addFragment(new CameraImage(), "Camera");
+//        //adapter.addFragment(new CameraImage(), "Camera");
+        adapter.addFragment(Camera2VideoFragment.newInstance(), "Camera");
         //adapter.addFragment(new FaceTrackerFragment(), "Face Tracker");
-
-       /* adapter.addFragment(new FourFragment(), "FOUR");
-        adapter.addFragment(new FiveFragment(), "FIVE");
-        adapter.addFragment(new SixFragment(), "SIX");*/
-        //viewPager.setAdapter(adapter);
+//
+//       /* adapter.addFragment(new FourFragment(), "FOUR");
+//        adapter.addFragment(new FiveFragment(), "FIVE");
+//        adapter.addFragment(new SixFragment(), "SIX");*/
+        viewPager.setAdapter(adapter);
     }
 
     private class MyCountDownTimer extends CountDownTimer {
@@ -424,7 +518,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onFinish() {
             progressDialog.dismiss();
-            loadFile(null);
+            loadFile();
         }
     }
 

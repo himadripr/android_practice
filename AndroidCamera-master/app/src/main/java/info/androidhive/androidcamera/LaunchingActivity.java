@@ -23,6 +23,8 @@ public class LaunchingActivity extends AppCompatActivity {
     private final int MY_PERMISSIONS_REQUEST_ACCESS_NETWORK_STATE = 15;
     private final int MY_PERMISSIONS_REQUEST_READ_GESERVICES = 16;
     private final int MY_PERMISSIONS_REQUEST_READ_WRITE_RECEIVE_SMS = 17;
+    private final int MY_PERMISSIONS_REQUEST_RECORD_AUDIO = 18;
+    private final int MY_PERMISSIONS_REQUEST_SYSTEM_ALERT_WINDOW = 19;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,7 +68,13 @@ public class LaunchingActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS,  Manifest.permission.RECEIVE_SMS},
                     MY_PERMISSIONS_REQUEST_READ_WRITE_RECEIVE_SMS);
-        } else {
+        } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.RECORD_AUDIO},
+                    MY_PERMISSIONS_REQUEST_RECORD_AUDIO);
+        }
+        else {
             startAction();
         }
 
@@ -180,6 +188,28 @@ public class LaunchingActivity extends AppCompatActivity {
                 return;
             }
             case MY_PERMISSIONS_REQUEST_READ_WRITE_RECEIVE_SMS: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    checkPermissions();
+                } else {
+                    Toast.makeText(this, "permission needed.", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                return;
+            }
+            case MY_PERMISSIONS_REQUEST_RECORD_AUDIO: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    checkPermissions();
+                } else {
+                    Toast.makeText(this, "permission needed.", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                return;
+            }
+            case MY_PERMISSIONS_REQUEST_SYSTEM_ALERT_WINDOW: {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {

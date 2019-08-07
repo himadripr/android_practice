@@ -12,6 +12,24 @@
     tools:context=".MainActivity"
     tools:showIn="@layout/activity_main">
 
+    <!--<LinearLayout-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:gravity="center"-->
+        <!--android:background="@android:color/transparent"-->
+        <!--android:layout_marginTop="5dp"-->
+        <!--android:layout_height="match_parent"-->
+
+        <!--&gt;-->
+
+        <!--<android.support.v4.view.ViewPager-->
+            <!--android:id="@+id/viewpagercamera"-->
+            <!--android:layout_gravity="center"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="match_parent"-->
+            <!--app:layout_behavior="@string/appbar_scrolling_view_behavior"  />-->
+
+    <!--</LinearLayout>-->
+
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -87,7 +105,7 @@
                 android:foreground="?attr/selectableItemBackground"
                 android:text="Download  File"
                 android:textAllCaps="false"
-                android:onClick="loadFile"
+
 
                 android:textColor="@android:color/white"
                 />
@@ -242,24 +260,12 @@
                 android:textColor="@android:color/black"
                 />
 
-            <!--<LinearLayout-->
-                <!--android:layout_width="match_parent"-->
-                <!--android:gravity="center"-->
-                <!--android:layout_marginTop="5dp"-->
-                <!--android:layout_height="wrap_content"-->
 
-                <!--&gt;-->
 
-                <!--<android.support.v4.view.ViewPager-->
-                    <!--android:id="@+id/viewpagercamera"-->
-                    <!--android:layout_gravity="center"-->
-                    <!--android:layout_width="50dp"-->
-                    <!--android:layout_height="50dp"-->
-                    <!--app:layout_behavior="@string/appbar_scrolling_view_behavior"  />-->
-
-            <!--</LinearLayout>-->
 
         </LinearLayout>
+
+
 
     </LinearLayout>
 </LinearLayout>
