@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Doc Sign Verification</string>
+    <string name="app_name">Tbits Doc Verifier</string>
     <string name="action_settings">Settings</string>
     <string name="preview_description">Pdf Viewer</string>
     <string name="btn_take_picture">Take Picture</string>

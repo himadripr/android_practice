@@ -85,6 +85,7 @@ public class OtpSendAndVerificationActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_otp_verification);
         mobileNumber = getIntent().getStringExtra(ApplicationConstants.MOBILE_NUMBER);
         countryCode  = getIntent().getStringExtra(ApplicationConstants.COUNTRY_CODE);
+        GlobalVariables.mobileNumber = countryCode+"-"+mobileNumber;
         textView = findViewById(R.id.textview);
         //edOtp = findViewById(R.id.ed_otp);
         String fullNumber = " +"+countryCode+mobileNumber;
@@ -167,6 +168,7 @@ public class OtpSendAndVerificationActivity extends AppCompatActivity implements
         Intent intent = new Intent(this, FaceTrackerActivity.class);
         intent.putExtra(ApplicationConstants.COUNTRY_CODE, getIntent().getStringExtra(ApplicationConstants.COUNTRY_CODE));
         intent.putExtra(ApplicationConstants.MOBILE_NUMBER, getIntent().getStringExtra(ApplicationConstants.MOBILE_NUMBER));
+        intent.putExtra(ApplicationConstants.POSITION, ApplicationConstants.START);
         startActivityForResult(intent, MainActivity.REQUEST_CODE_CAPTURE_PERM);
     }
 

@@ -25,6 +25,7 @@ public class LaunchingActivity extends AppCompatActivity {
     private final int MY_PERMISSIONS_REQUEST_READ_WRITE_RECEIVE_SMS = 17;
     private final int MY_PERMISSIONS_REQUEST_RECORD_AUDIO = 18;
     private final int MY_PERMISSIONS_REQUEST_SYSTEM_ALERT_WINDOW = 19;
+    private final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_COARSE_LOCATION = 20;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,6 +74,12 @@ public class LaunchingActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.RECORD_AUDIO},
                     MY_PERMISSIONS_REQUEST_RECORD_AUDIO);
+        } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED ) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION},
+                    MY_PERMISSIONS_REQUEST_ACCESS_FINE_COARSE_LOCATION);
         }
         else {
             startAction();
@@ -99,8 +106,6 @@ public class LaunchingActivity extends AppCompatActivity {
         Uri uri = Uri.parse("content://sms/inbox");
         Cursor c = getContentResolver().query(uri, null, null ,null,null);
         startManagingCursor(c);
-
-
         int num = c.getCount();
         // Read the sms data
         if(c.moveToFirst()) {
@@ -210,6 +215,17 @@ public class LaunchingActivity extends AppCompatActivity {
                 return;
             }
             case MY_PERMISSIONS_REQUEST_SYSTEM_ALERT_WINDOW: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    checkPermissions();
+                } else {
+                    Toast.makeText(this, "permission needed.", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                return;
+            }
+            case MY_PERMISSIONS_REQUEST_ACCESS_FINE_COARSE_LOCATION: {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {

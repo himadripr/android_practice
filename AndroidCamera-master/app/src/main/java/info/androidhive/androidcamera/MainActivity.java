@@ -1,20 +1,33 @@
 package info.androidhive.androidcamera;
 
+import android.Manifest;
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
+import android.graphics.SurfaceTexture;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCaptureSession;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraDevice;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.params.StreamConfigurationMap;
 import android.hardware.display.DisplayManager;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
+import android.media.MediaRecorder;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.Looper;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -23,8 +36,11 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.Size;
+import android.util.SparseIntArray;
 import android.view.Display;
 import android.view.Surface;
+import android.view.TextureView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -54,10 +70,14 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 
+import info.androidhive.androidcamera.face_tracking.FaceTrackerActivity;
 import info.androidhive.androidcamera.utility.*;
 import info.androidhive.androidcamera.video_recording.Camera2VideoFragment;
 
@@ -110,6 +130,7 @@ public class MainActivity extends AppCompatActivity {
             drainEncoder();
         }
     };
+    private String filePathForScreenRecordingVideo="";
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
@@ -153,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        downloadFileForTheGivenMobileNumber();
+        downloadSampleVideoToDisplayForScreenRecording();
         //viewPager = (ViewPager) findViewById(R.id.viewpagercamera);
         //camera2VideoFragment = Camera2VideoFragment.newInstance();
 
@@ -161,11 +182,58 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void downloadFileForTheGivenMobileNumber(){
+    private void downloadSampleVideoToDisplayForScreenRecording(){
         progressDialog = ProgressDialog.show(this, "", "Downloading File...");
+        String url = ApplicationConstants.BASE_URL+"/getDocument/samplevideo";
+        InputStreamVolleyRequest request = new InputStreamVolleyRequest(Request.Method.GET, url,
+                new Response.Listener<byte[]>() {
+                    @Override
+                    public void onResponse(byte[] response) {
+                        // TODO handle the response
+                        progressDialog.dismiss();
+                        try {
+                            if (response!=null) {
+                                FileOutputStream outputStream;
+                                String fileName = Utils.getRootPathOfApp(getApplicationContext());
+                                String timeStamp = String.valueOf(System.currentTimeMillis());
+                                filePathForScreenRecordingVideo = fileName+"/"+"Screen_recording_"+timeStamp+".mp4";
+                                File file = new File(filePathForScreenRecordingVideo);
+                                GlobalVariables.screenRecordingVideoFilePath = filePathForScreenRecordingVideo;
+                                file.createNewFile();
+                                outputStream = new FileOutputStream(file);
+                                outputStream.write(response);
+                                outputStream.close();
+                                downloadFileForTheGivenMobileNumber();
+                            }
+                        } catch (Exception e) {
+                            // TODO Auto-generated catch block
+                            Log.d("KEY_ERROR", "UNABLE TO DOWNLOAD FILE");
+                            Toast.makeText(MainActivity.this, "Unable to download file", Toast.LENGTH_SHORT).show();
+                            MainActivity.this.finish();
+                            progressDialog.dismiss();
+                            e.printStackTrace();
+                        }
+                    }
+                } ,new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                // TODO handle the error
+                progressDialog.dismiss();
+                Toast.makeText(MainActivity.this, "Unable to download file", Toast.LENGTH_SHORT).show();
+                MainActivity.this.finish();
+                error.printStackTrace();
+            }
+        }, null);
+        RequestQueue mRequestQueue = Volley.newRequestQueue(getApplicationContext(), new HurlStack());
+        mRequestQueue.add(request);
+    }
+
+    private void downloadFileForTheGivenMobileNumber(){
+
         //MyCountDownTimer myCountDownTimer = new MyCountDownTimer(1000, 500);
         //myCountDownTimer.start();
-        String url = "http://192.168.0.3:8080/sheet-cutting-plan/webapi/getDocument/"+getIntent().getStringExtra(ApplicationConstants.COUNTRY_CODE)+"/"+
+        String url = ApplicationConstants.BASE_URL+"/getDocument/"+getIntent().getStringExtra(ApplicationConstants.COUNTRY_CODE)+"/"+
             getIntent().getStringExtra(ApplicationConstants.MOBILE_NUMBER);
 //        HashMap<String, String> params = new HashMap<>();
 //        params.put("mobileNumber", getIntent().getStringExtra(ApplicationConstants.MOBILE_NUMBER));
@@ -178,7 +246,6 @@ public class MainActivity extends AppCompatActivity {
                         progressDialog.dismiss();
                         try {
                             if (response!=null) {
-
                                 FileOutputStream outputStream;
                                 String fileName = Utils.getRootPathOfApp(getApplicationContext());
                                 String timeStamp = String.valueOf(System.currentTimeMillis());
@@ -194,6 +261,8 @@ public class MainActivity extends AppCompatActivity {
                         } catch (Exception e) {
                             // TODO Auto-generated catch block
                             Log.d("KEY_ERROR", "UNABLE TO DOWNLOAD FILE");
+                            Toast.makeText(MainActivity.this, "Unable to download file", Toast.LENGTH_SHORT).show();
+                            MainActivity.this.finish();
                             progressDialog.dismiss();
                             e.printStackTrace();
                         }
@@ -204,6 +273,8 @@ public class MainActivity extends AppCompatActivity {
             public void onErrorResponse(VolleyError error) {
                 // TODO handle the error
                 progressDialog.dismiss();
+                Toast.makeText(MainActivity.this, "Unable to download file", Toast.LENGTH_SHORT).show();
+                MainActivity.this.finish();
                 error.printStackTrace();
             }
         }, null);
@@ -237,7 +308,8 @@ public class MainActivity extends AppCompatActivity {
 
         try {
 
-            mMuxer = new MediaMuxer("/storage/emulated/0/DCIM/Camera/video.mp4", MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
+            //mMuxer = new MediaMuxer("/storage/emulated/0/DCIM/Camera/video.mp4", MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
+            mMuxer = new MediaMuxer(filePathForScreenRecordingVideo, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
         } catch (IOException ioe) {
             throw new RuntimeException("MediaMuxer creation failed", ioe);
         }
@@ -421,12 +493,22 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Screen recording saved.", Toast.LENGTH_SHORT).show();
             //camera2VideoFragment.stopRecordingVideo();
             onStopScreenRecording(view);
-//
+            GlobalVariables.signatureImagePath = Utils.storeImage(mSignaturePad.getSignatureBitmap(), this);
+            startActivity();
             finish();
+
         } else {
             Toast.makeText(this, "Please sign the pad.", Toast.LENGTH_SHORT).show();
         }
 
+    }
+
+    private void startActivity(){
+        Intent intent = new Intent(this, FaceTrackerActivity.class);
+        intent.putExtra(ApplicationConstants.COUNTRY_CODE, getIntent().getStringExtra(ApplicationConstants.COUNTRY_CODE));
+        intent.putExtra(ApplicationConstants.MOBILE_NUMBER, getIntent().getStringExtra(ApplicationConstants.MOBILE_NUMBER));
+        intent.putExtra(ApplicationConstants.POSITION, ApplicationConstants.END);
+        startActivityForResult(intent, MainActivity.REQUEST_CODE_CAPTURE_PERM);
     }
 
     public void onFullScreenMode(View view) {

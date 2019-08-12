@@ -4,19 +4,21 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.hardware.Camera;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,11 +29,26 @@ import com.google.android.gms.vision.MultiProcessor;
 import com.google.android.gms.vision.Tracker;
 import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.FaceDetector;
+import com.google.gson.JsonObject;
+import com.koushikdutta.async.http.body.FilePart;
+import com.koushikdutta.async.http.body.Part;
+import com.koushikdutta.ion.Ion;
 
+import java.io.File;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
+import info.androidhive.androidcamera.ApplicationConstants;
+import info.androidhive.androidcamera.GlobalVariables;
 import info.androidhive.androidcamera.MainActivity;
 import info.androidhive.androidcamera.R;
+import info.androidhive.androidcamera.utility.GPSTracker;
 import info.androidhive.androidcamera.utility.Utils;
 
 /**
@@ -42,7 +59,7 @@ public class FaceTrackerActivity extends AppCompatActivity {
     private static final String TAG = "FaceTracker";
     private boolean imageCaptureFlag = false;
     private CameraSource mCameraSource = null;
-
+    private TextView text;
     private CameraSourcePreview mPreview;
     private GraphicOverlay mGraphicOverlay;
     private TextView mUpdates;
@@ -66,8 +83,13 @@ public class FaceTrackerActivity extends AppCompatActivity {
         mPreview = findViewById(R.id.preview);
         mGraphicOverlay = (GraphicOverlay) findViewById(R.id.faceOverlay);
         mUpdates = (TextView) findViewById(R.id.faceUpdates);
+        text = (TextView) findViewById(R.id.text);
 
-
+        if (getIntent().getStringExtra(ApplicationConstants.POSITION).equals(ApplicationConstants.START)){
+            text.setVisibility(View.GONE);
+        } else {
+            text.setVisibility(View.VISIBLE);
+        }
 
         // Check for the camera permission before accessing the camera.  If the
         // permission is not granted yet, request permission.
@@ -145,9 +167,33 @@ public class FaceTrackerActivity extends AppCompatActivity {
     }
 
     private void startActivity(){
-        startActivityForResult(new Intent(this,
-                        MainActivity.class),
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.putExtra(ApplicationConstants.COUNTRY_CODE, getIntent().getStringExtra(ApplicationConstants.COUNTRY_CODE));
+        intent.putExtra(ApplicationConstants.MOBILE_NUMBER, getIntent().getStringExtra(ApplicationConstants.MOBILE_NUMBER));
+        startActivityForResult(intent,
                 MainActivity.REQUEST_CODE_CAPTURE_PERM);
+    }
+
+    private boolean getGpsLocationANDTimeStamp(){
+        GPSTracker gpsTracker = new GPSTracker(FaceTrackerActivity.this);
+        if (gpsTracker.canGetLocation()){
+            DecimalFormat precision = new DecimalFormat("0.00");
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("d-MMM-yyyy HH:mm:ss");
+            if (getIntent().getStringExtra(ApplicationConstants.POSITION).equals(ApplicationConstants.START)){
+                GlobalVariables.startingLatitudes = precision.format(gpsTracker.getLatitude());
+                GlobalVariables.startingLongitudes = precision.format(gpsTracker.getLongitude());
+                GlobalVariables.startingTime = simpleDateFormat.format(new Date());
+            } else if (getIntent().getStringExtra(ApplicationConstants.POSITION).equals(ApplicationConstants.END)){
+                GlobalVariables.endingLatitudes = precision.format(gpsTracker.getLatitude());
+                GlobalVariables.endingLongitudes = precision.format(gpsTracker.getLongitude());
+                GlobalVariables.endingTime = simpleDateFormat.format(new Date());
+            }
+            gpsTracker.stopUsingGPS();
+            return true;
+        } else {
+            gpsTracker.showSettingsAlert();
+            return false;
+        }
     }
 
     private void captureImage(){
@@ -156,10 +202,111 @@ public class FaceTrackerActivity extends AppCompatActivity {
             public void onPictureTaken(byte[] bytes) {
                 Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                 Bitmap bitmapCaptured = bmp.copy(Bitmap.Config.ARGB_8888, true);
-                Utils.storeImage(bitmapCaptured, getApplicationContext());
-                startActivity();
+//                String text = "Lat: "+GlobalVariables.startingLatitudes + ",  "+
+//                        "Long: "+GlobalVariables.startingLongitudes + ",    Date Time:   "+
+//                        dateTime;
+                //bitmapCaptured = WriteTextOnImage.writeTextOnBitmap(FaceTrackerActivity.this, bitmapCaptured, text);
+                String filePath = Utils.storeImage(bitmapCaptured, getApplicationContext());
+                if (filePath!=null){
+                   // Toast.makeText(FaceTrackerActivity.this, "Image is saved at location : "+filePath, Toast.LENGTH_LONG).show();
+                    imageCaptureFlag = false;
+                    if (FaceTrackerActivity.this.getIntent().getStringExtra(ApplicationConstants.POSITION).equals(ApplicationConstants.START)){
+                        GlobalVariables.startingImageFilePath = filePath;
+                        startActivity();
+                    } else if (FaceTrackerActivity.this.getIntent().getStringExtra(ApplicationConstants.POSITION).equals(ApplicationConstants.END)){
+                        GlobalVariables.endingImageFilePath = filePath;
+                        try {
+                            uploadFilesToServer();
+                        } catch (ExecutionException e) {
+                            e.printStackTrace();
+                            FaceTrackerActivity.this.finish();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                            FaceTrackerActivity.this.finish();
+                        }
+                    }
+                } else {
+                    Toast.makeText(FaceTrackerActivity.this, "Some problem has occurred", Toast.LENGTH_SHORT).show();
+                    FaceTrackerActivity.this.finish();
+                }
+
             }
         });
+    }
+
+    ProgressDialog progressDialog;
+
+
+    private void uploadFilesToServer() throws ExecutionException, InterruptedException {
+        progressDialog = ProgressDialog.show(this, "", "Processing...");
+        new AsyncPostCall(this).execute();
+    }
+
+    private void finishFaceTrackerActivity(){
+        progressDialog.dismiss();
+        this.finish();
+    }
+    private class AsyncPostCall extends AsyncTask<Void, Void, Boolean> {
+        WeakReference<Activity> activityWeakReference;
+
+
+        AsyncPostCall(Activity activity){
+            activityWeakReference = new WeakReference<Activity>(activity);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... voids) {
+            List<Part> files = new ArrayList<>();
+            files.add(new FilePart("screenRecording", new File(GlobalVariables.screenRecordingVideoFilePath)));
+            files.add(new FilePart("signature", new File(GlobalVariables.signatureImagePath)));
+            files.add(new FilePart("startingImage", new File(GlobalVariables.startingImageFilePath)));
+            files.add(new FilePart("endingImage", new File(GlobalVariables.endingImageFilePath)));
+            try {
+                JsonObject jsonObject = Ion
+                        .with(activityWeakReference.get())
+                        .load(ApplicationConstants.BASE_URL+"/document/upload")
+                        .setTimeout(60*60*1000)
+                        .setMultipartParameter("mobileNumber", GlobalVariables.mobileNumber)
+                        .setMultipartParameter("startingLatitude", GlobalVariables.startingLatitudes)
+                        .setMultipartParameter("startingLongitude", GlobalVariables.startingLongitudes)
+                        .setMultipartParameter("startingDateTime", GlobalVariables.startingTime)
+                        .setMultipartParameter("endingLatitude", GlobalVariables.endingLatitudes)
+                        .setMultipartParameter("endingLongitude", GlobalVariables.endingLongitudes)
+                        .setMultipartParameter("endingDateTime", GlobalVariables.endingTime)
+                        .addMultipartParts(files)
+
+                        .asJsonObject()
+                        .get();
+                System.out.println();
+                if (jsonObject.getAsString().equals("success")){
+                    return true;
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+            return false;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean flag) {
+            super.onPostExecute(flag);
+            Toast.makeText(activityWeakReference.get(), "Process completed...", Toast.LENGTH_LONG).show();
+//            if (flag){
+//                Toast.makeText(activityWeakReference.get(), "Process completed...", Toast.LENGTH_SHORT).show();
+//            } else {
+//                Toast.makeText(activityWeakReference.get(), "Something went wrong. Please try again.", Toast.LENGTH_SHORT).show();
+//            }
+            finishFaceTrackerActivity();
+
+        }
     }
 
     /**
@@ -282,7 +429,13 @@ public class FaceTrackerActivity extends AppCompatActivity {
     }
 
     public void onScanButtonClick(View view) {
-        imageCaptureFlag = true;
+        if (getGpsLocationANDTimeStamp()){
+            imageCaptureFlag = true;
+            Button scanButton = findViewById(R.id.button_scan);
+            scanButton.setEnabled(false);
+            scanButton.setVisibility(View.INVISIBLE);
+        }
+
 
     }
 
