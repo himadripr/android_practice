@@ -84,11 +84,19 @@ public class FaceTrackerActivity extends AppCompatActivity {
         mGraphicOverlay = (GraphicOverlay) findViewById(R.id.faceOverlay);
         mUpdates = (TextView) findViewById(R.id.faceUpdates);
         text = (TextView) findViewById(R.id.text);
-
+        text.setVisibility(View.GONE);
         if (getIntent().getStringExtra(ApplicationConstants.POSITION).equals(ApplicationConstants.START)){
-            text.setVisibility(View.GONE);
+
         } else {
-            text.setVisibility(View.VISIBLE);
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Scan your face again to complete the process");
+            builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                }
+            });
+            builder.show();
         }
 
         // Check for the camera permission before accessing the camera.  If the
@@ -196,20 +204,32 @@ public class FaceTrackerActivity extends AppCompatActivity {
         }
     }
 
+    private static Bitmap rescaleBitmapWidthHeight(Bitmap bitmap){
+        int width, height;
+        if (bitmap.getWidth()>bitmap.getHeight()){
+            width=1040;
+            height = (int)(width*((float)bitmap.getHeight()/(float)bitmap.getWidth()));
+        } else{
+            height = 1040;//1040
+            width = (int)(height*((float)bitmap.getWidth()/(float)bitmap.getHeight()));
+        }
+        bitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
+        return bitmap;
+    }
+
     private void captureImage(){
         mCameraSource.takePicture(null, new CameraSource.PictureCallback() {
             @Override
             public void onPictureTaken(byte[] bytes) {
                 Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                 Bitmap bitmapCaptured = bmp.copy(Bitmap.Config.ARGB_8888, true);
-//                String text = "Lat: "+GlobalVariables.startingLatitudes + ",  "+
-//                        "Long: "+GlobalVariables.startingLongitudes + ",    Date Time:   "+
-//                        dateTime;
-                //bitmapCaptured = WriteTextOnImage.writeTextOnBitmap(FaceTrackerActivity.this, bitmapCaptured, text);
+                bitmapCaptured = rescaleBitmapWidthHeight(bitmapCaptured);
+                imageCaptureFlag = false;
                 String filePath = Utils.storeImage(bitmapCaptured, getApplicationContext());
+
                 if (filePath!=null){
-                   // Toast.makeText(FaceTrackerActivity.this, "Image is saved at location : "+filePath, Toast.LENGTH_LONG).show();
-                    imageCaptureFlag = false;
+                    // Toast.makeText(FaceTrackerActivity.this, "Image is saved at location : "+filePath, Toast.LENGTH_LONG).show();
+
                     if (FaceTrackerActivity.this.getIntent().getStringExtra(ApplicationConstants.POSITION).equals(ApplicationConstants.START)){
                         GlobalVariables.startingImageFilePath = filePath;
                         startActivity();
@@ -242,16 +262,17 @@ public class FaceTrackerActivity extends AppCompatActivity {
         new AsyncPostCall(this).execute();
     }
 
-    private void finishFaceTrackerActivity(){
+    public void finishFaceTrackerActivity(){
         progressDialog.dismiss();
         this.finish();
     }
     private class AsyncPostCall extends AsyncTask<Void, Void, Boolean> {
         WeakReference<Activity> activityWeakReference;
-
+        ArrayList<Exception> exceptions;
 
         AsyncPostCall(Activity activity){
             activityWeakReference = new WeakReference<Activity>(activity);
+            exceptions = new ArrayList<>();
         }
 
         @Override
@@ -268,7 +289,7 @@ public class FaceTrackerActivity extends AppCompatActivity {
             files.add(new FilePart("startingImage", new File(GlobalVariables.startingImageFilePath)));
             files.add(new FilePart("endingImage", new File(GlobalVariables.endingImageFilePath)));
             try {
-                JsonObject jsonObject = Ion
+                String string = Ion
                         .with(activityWeakReference.get())
                         .load(ApplicationConstants.BASE_URL+"/document/upload")
                         .setTimeout(60*60*1000)
@@ -281,16 +302,20 @@ public class FaceTrackerActivity extends AppCompatActivity {
                         .setMultipartParameter("endingDateTime", GlobalVariables.endingTime)
                         .addMultipartParts(files)
 
-                        .asJsonObject()
+                        .asString()
                         .get();
                 System.out.println();
-                if (jsonObject.getAsString().equals("success")){
+
+                if (string.equals("success")){
                     return true;
                 }
             } catch (InterruptedException e) {
+                exceptions.add(e);
                 e.printStackTrace();
-            } catch (ExecutionException e) {
+            } catch (Exception e) {
+                exceptions.add(e);
                 e.printStackTrace();
+
             }
             return false;
         }
@@ -298,12 +323,16 @@ public class FaceTrackerActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Boolean flag) {
             super.onPostExecute(flag);
-            Toast.makeText(activityWeakReference.get(), "Process completed...", Toast.LENGTH_LONG).show();
-//            if (flag){
-//                Toast.makeText(activityWeakReference.get(), "Process completed...", Toast.LENGTH_SHORT).show();
-//            } else {
-//                Toast.makeText(activityWeakReference.get(), "Something went wrong. Please try again.", Toast.LENGTH_SHORT).show();
-//            }
+
+            if (flag){
+                Toast.makeText(activityWeakReference.get(), "Process completed...", Toast.LENGTH_SHORT).show();
+            } else {
+
+                Toast.makeText(activityWeakReference.get(), "Something went wrong. Please try again.", Toast.LENGTH_SHORT).show();
+                for (Exception e: exceptions){
+                    Toast.makeText(FaceTrackerActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }
             finishFaceTrackerActivity();
 
         }
@@ -483,6 +512,7 @@ public class FaceTrackerActivity extends AppCompatActivity {
         public void onUpdate(FaceDetector.Detections<Face> detectionResults, Face face) {
             mOverlay.add(mFaceGraphic);
             mFaceGraphic.updateFace(face);
+
             if (imageCaptureFlag){
                 mFaceGraphic.setCircleNeedsToBeShown(true);
                 if (mFaceGraphic.isFaceUpfrontAndUpright()) {
@@ -511,4 +541,6 @@ public class FaceTrackerActivity extends AppCompatActivity {
             mOverlay.remove(mFaceGraphic);
         }
     }
+
+
 }

@@ -255,7 +255,7 @@ public class MainActivity extends AppCompatActivity {
                                 outputStream = new FileOutputStream(file);
                                 outputStream.write(response);
                                 outputStream.close();
-                                Toast.makeText(MainActivity.this, "Download complete.", Toast.LENGTH_LONG).show();
+                                Toast.makeText(MainActivity.this, "Download complete.", Toast.LENGTH_SHORT).show();
                                 loadFile(file);
                             }
                         } catch (Exception e) {

@@ -6,7 +6,7 @@ public class ApplicationConstants {
     public static final String START = "START";
     public static final String END = "END";
     public static final String POSITION = "POSITION";
-    public static final String BASE_URL = "https://falcon.mytbits.com:8181/tbits-document-verifier/webapi";
+    public static final String BASE_URL = "https://falcon.mytbits.com:6081/tbits-document-verifier/webapi";
 
 
 }
