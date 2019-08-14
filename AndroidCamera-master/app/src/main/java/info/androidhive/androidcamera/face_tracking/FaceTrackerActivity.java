@@ -33,16 +33,37 @@ import com.google.gson.JsonObject;
 import com.koushikdutta.async.http.body.FilePart;
 import com.koushikdutta.async.http.body.Part;
 import com.koushikdutta.ion.Ion;
+//
+//import org.apache.http.HttpEntity;
+//import org.apache.http.HttpResponse;
+//import org.apache.http.client.HttpClient;
+//import org.apache.http.client.entity.UrlEncodedFormEntity;
+//import org.apache.http.client.methods.HttpPost;
+//import org.apache.http.entity.ContentType;
+//import org.apache.http.impl.client.HttpClientBuilder;
+//import org.apache.http.impl.client.HttpClients;
+//import org.apache.http.NameValuePair;
+//import org.apache.http.entity.mime.HttpMultipartMode;
+//import org.apache.http.entity.mime.MultipartEntity;
+//import org.apache.http.entity.mime.content.FileBody;
+//
+//
+//import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
+import java.net.UnknownHostException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import info.androidhive.androidcamera.ApplicationConstants;
 import info.androidhive.androidcamera.GlobalVariables;
@@ -50,6 +71,12 @@ import info.androidhive.androidcamera.MainActivity;
 import info.androidhive.androidcamera.R;
 import info.androidhive.androidcamera.utility.GPSTracker;
 import info.androidhive.androidcamera.utility.Utils;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 /**
  * Activity for the face tracker app.  This app detects faces with the rear facing camera, and draws
@@ -283,41 +310,143 @@ public class FaceTrackerActivity extends AppCompatActivity {
 
         @Override
         protected Boolean doInBackground(Void... voids) {
-            List<Part> files = new ArrayList<>();
-            files.add(new FilePart("screenRecording", new File(GlobalVariables.screenRecordingVideoFilePath)));
-            files.add(new FilePart("signature", new File(GlobalVariables.signatureImagePath)));
-            files.add(new FilePart("startingImage", new File(GlobalVariables.startingImageFilePath)));
-            files.add(new FilePart("endingImage", new File(GlobalVariables.endingImageFilePath)));
+//            List<Part> files = new ArrayList<>();
+//            files.add(new FilePart("screenRecording", new File(GlobalVariables.screenRecordingVideoFilePath)));
+//            files.add(new FilePart("signature", new File(GlobalVariables.signatureImagePath)));
+//            files.add(new FilePart("startingImage", new File(GlobalVariables.startingImageFilePath)));
+//            files.add(new FilePart("endingImage", new File(GlobalVariables.endingImageFilePath)));
+//            try {
+//                String string = Ion
+//                        .with(activityWeakReference.get())
+//                        .load(ApplicationConstants.BASE_URL+"/document/upload")
+//                        .setTimeout(60*60*1000)
+//                        .setMultipartParameter("mobileNumber", GlobalVariables.mobileNumber)
+//                        .setMultipartParameter("startingLatitude", GlobalVariables.startingLatitudes)
+//                        .setMultipartParameter("startingLongitude", GlobalVariables.startingLongitudes)
+//                        .setMultipartParameter("startingDateTime", GlobalVariables.startingTime)
+//                        .setMultipartParameter("endingLatitude", GlobalVariables.endingLatitudes)
+//                        .setMultipartParameter("endingLongitude", GlobalVariables.endingLongitudes)
+//                        .setMultipartParameter("endingDateTime", GlobalVariables.endingTime)
+//                        .addMultipartParts(files)
+//
+//                        .asString()
+//                        .get();
+//                System.out.println();
+//
+//                if (string.equals("success")){
+//                    return true;
+//                }
+//            } catch (InterruptedException e) {
+//                exceptions.add(e);
+//                e.printStackTrace();
+//            } catch (Exception e) {
+//                exceptions.add(e);
+//                e.printStackTrace();
+//
+//            }
+            uploadData();
+            return true;
+        }
+
+//        public String uploadFiles() throws IOException {
+//            HttpClient httpclient = HttpClients.createDefault();
+//            HttpPost httppost = new HttpPost("http://www.a-domain.com/foo/");
+//
+//// Request parameters and other properties.
+//            List<NameValuePair> params = new ArrayList<NameValuePair>(2);
+//            params.add(new BasicNameValuePair("param-1", "12345"));
+//            params.add(new BasicNameValuePair("param-2", "Hello!"));
+//
+//
+//
+//            httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
+//
+////Execute and get the response.
+//            HttpResponse response = httpclient.execute(httppost);
+//            HttpEntity entity = response.getEntity();
+//
+//
+//
+//
+//            File file = new File("data.zip");
+//            FileBody fileBody = new FileBody(file, "image/jpg");
+//            MultipartEntity multipartEntity = new MultipartEntity();
+//
+//
+//            MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+//            builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+//            builder.addPart("file", fileBody);
+//            HttpEntity entity = builder.build();
+//
+//            HttpPost request = new HttpPost("http://localhost:8080/upload");
+//            request.setEntity(entity);
+//
+//            HttpClient client = HttpClientBuilder.create().build();
+//
+//
+//
+//            if (entity != null) {
+//                try (InputStream instream = entity.getContent()) {
+//                    // do something useful
+//                    return "success";
+//                }
+//
+//            }
+//            return null;
+//        }
+
+        public String uploadData() {
+
             try {
-                String string = Ion
-                        .with(activityWeakReference.get())
-                        .load(ApplicationConstants.BASE_URL+"/document/upload")
-                        .setTimeout(60*60*1000)
-                        .setMultipartParameter("mobileNumber", GlobalVariables.mobileNumber)
-                        .setMultipartParameter("startingLatitude", GlobalVariables.startingLatitudes)
-                        .setMultipartParameter("startingLongitude", GlobalVariables.startingLongitudes)
-                        .setMultipartParameter("startingDateTime", GlobalVariables.startingTime)
-                        .setMultipartParameter("endingLatitude", GlobalVariables.endingLatitudes)
-                        .setMultipartParameter("endingLongitude", GlobalVariables.endingLongitudes)
-                        .setMultipartParameter("endingDateTime", GlobalVariables.endingTime)
-                        .addMultipartParts(files)
 
-                        .asString()
-                        .get();
-                System.out.println();
+                final MediaType MEDIA_TYPE_JPG = MediaType.parse("image/jpeg");
+                final MediaType MEDIA_TYPE_MP4 = MediaType.parse("video/mp4");
 
-                if (string.equals("success")){
-                    return true;
-                }
-            } catch (InterruptedException e) {
+
+                RequestBody req = new MultipartBody.Builder().setType(MultipartBody.FORM)
+//                        .addFormDataPart("userid", "8457851245")
+//                        .addFormDataPart("userfile","profile.png", RequestBody.create(MEDIA_TYPE_JPG, file))
+
+                        .addFormDataPart("screenRecording","screenRecording.mp4", RequestBody.create(MEDIA_TYPE_MP4, new File(GlobalVariables.screenRecordingVideoFilePath)))
+                        .addFormDataPart("signature","signature.jpg", RequestBody.create(MEDIA_TYPE_JPG, new File(GlobalVariables.signatureImagePath)))
+                        .addFormDataPart("startingImage","startingImage.jpg", RequestBody.create(MEDIA_TYPE_JPG, new File(GlobalVariables.startingImageFilePath)))
+                        .addFormDataPart("endingImage","endingImage.jpg", RequestBody.create(MEDIA_TYPE_JPG, new File(GlobalVariables.endingImageFilePath)))
+
+                        .addFormDataPart("mobileNumber", GlobalVariables.mobileNumber)
+                        .addFormDataPart("startingLatitude", GlobalVariables.startingLatitudes)
+                        .addFormDataPart("startingLongitude", GlobalVariables.startingLongitudes)
+                        .addFormDataPart("startingDateTime", GlobalVariables.startingTime)
+                        .addFormDataPart("endingLatitude", GlobalVariables.endingLatitudes)
+                        .addFormDataPart("endingLongitude", GlobalVariables.endingLongitudes)
+                        .addFormDataPart("endingDateTime", GlobalVariables.endingTime)
+
+                        .build();
+
+                Request request = new Request.Builder()
+
+                        .url(ApplicationConstants.BASE_URL+"/document/upload")
+
+                        .post(req)
+
+                        .build();
+
+                OkHttpClient client;
+                client = new OkHttpClient.Builder().build();
+                Response response = client.newCall(request).execute();
+
+                Log.d("response", "uploadImage:"+response.body().string());
+                String result = response.body().string();
+//                return new JSONObject(response.body().string());
+                return response.body().string();
+
+            } catch (UnknownHostException | UnsupportedEncodingException e) {
                 exceptions.add(e);
-                e.printStackTrace();
+                Log.e(TAG, "Error: " + e.getLocalizedMessage());
             } catch (Exception e) {
                 exceptions.add(e);
-                e.printStackTrace();
-
+                Log.e(TAG, "Other Error: " + e.getLocalizedMessage());
             }
-            return false;
+            return null;
         }
 
         @Override

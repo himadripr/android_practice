@@ -16,6 +16,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    //useLibrary 'org.apache.http.legacy'
 }
 
 dependencies {
@@ -30,6 +31,13 @@ dependencies {
     implementation 'com.github.joielechong:countrycodepicker:2.3.3'
     implementation 'com.koushikdutta.ion:ion:2.+'
     implementation 'com.android.volley:volley:1.0.0'
+    implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.2.0'
+    // https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient
+    //implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.3.4'
+    // https://mvnrepository.com/artifact/org.apache.httpcomponents/httpmime
+    //implementation group: 'org.apache.httpcomponents', name: 'httpmime', version: '4.2.5'
+
+
     //country code picker
     implementation 'com.msg91.sendotpandroid.library:library:0.4'
     implementation 'com.android.support:support-v4:27.1.1'
