@@ -7,6 +7,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -493,7 +494,8 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Screen recording saved.", Toast.LENGTH_SHORT).show();
             //camera2VideoFragment.stopRecordingVideo();
             onStopScreenRecording(view);
-            GlobalVariables.signatureImagePath = Utils.storeImage(mSignaturePad.getSignatureBitmap(), this, 100);
+            Bitmap signBitmap = Utils.rescaleBitmapWidthHeight(mSignaturePad.getSignatureBitmap(), 100);
+            GlobalVariables.signatureImagePath = Utils.storeImage(signBitmap, this, 100);
             startActivity();
             finish();
 

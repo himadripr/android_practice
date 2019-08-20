@@ -18,6 +18,19 @@ import info.androidhive.androidcamera.R;
 
 public class Utils {
 
+    public static Bitmap rescaleBitmapWidthHeight(Bitmap bitmap, int size){
+        int width, height;
+        if (bitmap.getWidth()>bitmap.getHeight()){
+            width=size;
+            height = (int)(width*((float)bitmap.getHeight()/(float)bitmap.getWidth()));
+        } else{
+            height = size;
+            width = (int)(height*((float)bitmap.getWidth()/(float)bitmap.getHeight()));
+        }
+        bitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
+        return bitmap;
+    }
+
 
     private static final String TAG = "Utils";
 

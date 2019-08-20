@@ -231,18 +231,18 @@ public class FaceTrackerActivity extends AppCompatActivity {
         }
     }
 
-    private static Bitmap rescaleBitmapWidthHeight(Bitmap bitmap){
-        int width, height;
-        if (bitmap.getWidth()>bitmap.getHeight()){
-            width=100;
-            height = (int)(width*((float)bitmap.getHeight()/(float)bitmap.getWidth()));
-        } else{
-            height = 100;//1040
-            width = (int)(height*((float)bitmap.getWidth()/(float)bitmap.getHeight()));
-        }
-        bitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
-        return bitmap;
-    }
+//    private static Bitmap rescaleBitmapWidthHeight(Bitmap bitmap){
+//        int width, height;
+//        if (bitmap.getWidth()>bitmap.getHeight()){
+//            width=100;
+//            height = (int)(width*((float)bitmap.getHeight()/(float)bitmap.getWidth()));
+//        } else{
+//            height = 100;//1040
+//            width = (int)(height*((float)bitmap.getWidth()/(float)bitmap.getHeight()));
+//        }
+//        bitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
+//        return bitmap;
+//    }
 
     private void captureImage(){
         mCameraSource.takePicture(null, new CameraSource.PictureCallback() {
@@ -250,7 +250,8 @@ public class FaceTrackerActivity extends AppCompatActivity {
             public void onPictureTaken(byte[] bytes) {
                 Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                 Bitmap bitmapCaptured = bmp.copy(Bitmap.Config.ARGB_8888, true);
-                bitmapCaptured = rescaleBitmapWidthHeight(bitmapCaptured);
+
+                bitmapCaptured = Utils.rescaleBitmapWidthHeight(bitmapCaptured, 100);
                 imageCaptureFlag = false;
                 String filePath = Utils.storeImage(bitmapCaptured, getApplicationContext(), 100);
 
