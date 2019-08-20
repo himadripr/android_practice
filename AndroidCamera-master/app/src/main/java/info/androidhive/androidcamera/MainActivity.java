@@ -58,10 +58,10 @@ import com.google.gson.JsonObject;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
 
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
+//import org.apache.pdfbox.pdmodel.PDDocument;
+//import org.apache.pdfbox.pdmodel.PDPage;
+//import org.apache.pdfbox.pdmodel.PDPageContentStream;
+//import org.apache.pdfbox.pdmodel.font.PDType1Font;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -493,7 +493,7 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Screen recording saved.", Toast.LENGTH_SHORT).show();
             //camera2VideoFragment.stopRecordingVideo();
             onStopScreenRecording(view);
-            GlobalVariables.signatureImagePath = Utils.storeImage(mSignaturePad.getSignatureBitmap(), this);
+            GlobalVariables.signatureImagePath = Utils.storeImage(mSignaturePad.getSignatureBitmap(), this, 100);
             startActivity();
             finish();
 

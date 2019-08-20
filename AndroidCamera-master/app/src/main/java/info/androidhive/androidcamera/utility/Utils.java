@@ -21,7 +21,7 @@ public class Utils {
 
     private static final String TAG = "Utils";
 
-    public static String storeImage(Bitmap image, Context context) {
+    public static String storeImage(Bitmap image, Context context, int quality) {
         File pictureFile = getOutputMediaFile(context);
         if (pictureFile == null) {
             Log.d(TAG,
@@ -30,7 +30,7 @@ public class Utils {
         }
         try {
             FileOutputStream fos = new FileOutputStream(pictureFile);
-            image.compress(Bitmap.CompressFormat.PNG, 90, fos);
+            image.compress(Bitmap.CompressFormat.JPEG, quality, fos);
             fos.close();
             return pictureFile.getAbsolutePath();
         } catch (FileNotFoundException e) {
@@ -68,7 +68,7 @@ public class Utils {
         // Create a media file name
         String timeStamp = new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date());
         File mediaFile;
-        String mImageName="IMG_"+ timeStamp +".jpg";
+        String mImageName="IMG_"+ timeStamp +".jpeg";
         mediaFile = new File(mediaStorageDir.getPath() + File.separator + mImageName);
         return mediaFile;
     }

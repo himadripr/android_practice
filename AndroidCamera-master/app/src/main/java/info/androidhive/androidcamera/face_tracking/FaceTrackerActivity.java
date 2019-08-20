@@ -86,7 +86,7 @@ public class FaceTrackerActivity extends AppCompatActivity {
     private static final String TAG = "FaceTracker";
     private boolean imageCaptureFlag = false;
     private CameraSource mCameraSource = null;
-    private TextView text;
+    //private TextView text;
     private CameraSourcePreview mPreview;
     private GraphicOverlay mGraphicOverlay;
     private TextView mUpdates;
@@ -110,8 +110,8 @@ public class FaceTrackerActivity extends AppCompatActivity {
         mPreview = findViewById(R.id.preview);
         mGraphicOverlay = (GraphicOverlay) findViewById(R.id.faceOverlay);
         mUpdates = (TextView) findViewById(R.id.faceUpdates);
-        text = (TextView) findViewById(R.id.text);
-        text.setVisibility(View.GONE);
+
+
         if (getIntent().getStringExtra(ApplicationConstants.POSITION).equals(ApplicationConstants.START)){
 
         } else {
@@ -234,10 +234,10 @@ public class FaceTrackerActivity extends AppCompatActivity {
     private static Bitmap rescaleBitmapWidthHeight(Bitmap bitmap){
         int width, height;
         if (bitmap.getWidth()>bitmap.getHeight()){
-            width=1040;
+            width=100;
             height = (int)(width*((float)bitmap.getHeight()/(float)bitmap.getWidth()));
         } else{
-            height = 1040;//1040
+            height = 100;//1040
             width = (int)(height*((float)bitmap.getWidth()/(float)bitmap.getHeight()));
         }
         bitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
@@ -252,7 +252,7 @@ public class FaceTrackerActivity extends AppCompatActivity {
                 Bitmap bitmapCaptured = bmp.copy(Bitmap.Config.ARGB_8888, true);
                 bitmapCaptured = rescaleBitmapWidthHeight(bitmapCaptured);
                 imageCaptureFlag = false;
-                String filePath = Utils.storeImage(bitmapCaptured, getApplicationContext());
+                String filePath = Utils.storeImage(bitmapCaptured, getApplicationContext(), 100);
 
                 if (filePath!=null){
                     // Toast.makeText(FaceTrackerActivity.this, "Image is saved at location : "+filePath, Toast.LENGTH_LONG).show();
