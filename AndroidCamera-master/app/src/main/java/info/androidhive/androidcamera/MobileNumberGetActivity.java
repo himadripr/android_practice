@@ -132,4 +132,10 @@ public class MobileNumberGetActivity extends AppCompatActivity {
             progressDialog.dismiss();
         }
     }
+
+    @Override
+    public void onBackPressed() {
+        //super.onBackPressed();
+        moveTaskToBack(true);
+    }
 }

@@ -22,6 +22,10 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.HurlStack;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.vision.CameraSource;
@@ -52,6 +56,7 @@ import com.koushikdutta.ion.Ion;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -66,10 +71,14 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import info.androidhive.androidcamera.ApplicationConstants;
+import info.androidhive.androidcamera.CompleteSessionActivity;
 import info.androidhive.androidcamera.GlobalVariables;
 import info.androidhive.androidcamera.MainActivity;
 import info.androidhive.androidcamera.R;
+import info.androidhive.androidcamera.interfaces.PostCallResponseHandler;
+import info.androidhive.androidcamera.utility.AsyncPostCall;
 import info.androidhive.androidcamera.utility.GPSTracker;
+import info.androidhive.androidcamera.utility.InputStreamVolleyRequest;
 import info.androidhive.androidcamera.utility.Utils;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -251,7 +260,7 @@ public class FaceTrackerActivity extends AppCompatActivity {
                 Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                 Bitmap bitmapCaptured = bmp.copy(Bitmap.Config.ARGB_8888, true);
 
-                bitmapCaptured = Utils.rescaleBitmapWidthHeight(bitmapCaptured, 100);
+                bitmapCaptured = Utils.rescaleBitmapWidthHeight(bitmapCaptured, ApplicationConstants.IMAGE_SIZE);
                 imageCaptureFlag = false;
                 String filePath = Utils.storeImage(bitmapCaptured, getApplicationContext(), 100);
 
@@ -263,15 +272,8 @@ public class FaceTrackerActivity extends AppCompatActivity {
                         startActivity();
                     } else if (FaceTrackerActivity.this.getIntent().getStringExtra(ApplicationConstants.POSITION).equals(ApplicationConstants.END)){
                         GlobalVariables.endingImageFilePath = filePath;
-                        try {
-                            uploadFilesToServer();
-                        } catch (ExecutionException e) {
-                            e.printStackTrace();
-                            FaceTrackerActivity.this.finish();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                            FaceTrackerActivity.this.finish();
-                        }
+                        startCompleteSessionActivity();
+
                     }
                 } else {
                     Toast.makeText(FaceTrackerActivity.this, "Some problem has occurred", Toast.LENGTH_SHORT).show();
@@ -282,191 +284,16 @@ public class FaceTrackerActivity extends AppCompatActivity {
         });
     }
 
-    ProgressDialog progressDialog;
+    private void startCompleteSessionActivity(){
+        Intent intent = new Intent(this, CompleteSessionActivity.class);
+        intent.putExtra(ApplicationConstants.COUNTRY_CODE, getIntent().getStringExtra(ApplicationConstants.COUNTRY_CODE));
+        intent.putExtra(ApplicationConstants.MOBILE_NUMBER, getIntent().getStringExtra(ApplicationConstants.MOBILE_NUMBER));
+        startActivityForResult(intent,
+                MainActivity.REQUEST_CODE_CAPTURE_PERM);
+        finish();
 
-
-    private void uploadFilesToServer() throws ExecutionException, InterruptedException {
-        progressDialog = ProgressDialog.show(this, "", "Processing...");
-        new AsyncPostCall(this).execute();
     }
 
-    public void finishFaceTrackerActivity(){
-        progressDialog.dismiss();
-        this.finish();
-    }
-    private class AsyncPostCall extends AsyncTask<Void, Void, Boolean> {
-        WeakReference<Activity> activityWeakReference;
-        ArrayList<Exception> exceptions;
-
-        AsyncPostCall(Activity activity){
-            activityWeakReference = new WeakReference<Activity>(activity);
-            exceptions = new ArrayList<>();
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-
-        }
-
-        @Override
-        protected Boolean doInBackground(Void... voids) {
-//            List<Part> files = new ArrayList<>();
-//            files.add(new FilePart("screenRecording", new File(GlobalVariables.screenRecordingVideoFilePath)));
-//            files.add(new FilePart("signature", new File(GlobalVariables.signatureImagePath)));
-//            files.add(new FilePart("startingImage", new File(GlobalVariables.startingImageFilePath)));
-//            files.add(new FilePart("endingImage", new File(GlobalVariables.endingImageFilePath)));
-//            try {
-//                String string = Ion
-//                        .with(activityWeakReference.get())
-//                        .load(ApplicationConstants.BASE_URL+"/document/upload")
-//                        .setTimeout(60*60*1000)
-//                        .setMultipartParameter("mobileNumber", GlobalVariables.mobileNumber)
-//                        .setMultipartParameter("startingLatitude", GlobalVariables.startingLatitudes)
-//                        .setMultipartParameter("startingLongitude", GlobalVariables.startingLongitudes)
-//                        .setMultipartParameter("startingDateTime", GlobalVariables.startingTime)
-//                        .setMultipartParameter("endingLatitude", GlobalVariables.endingLatitudes)
-//                        .setMultipartParameter("endingLongitude", GlobalVariables.endingLongitudes)
-//                        .setMultipartParameter("endingDateTime", GlobalVariables.endingTime)
-//                        .addMultipartParts(files)
-//
-//                        .asString()
-//                        .get();
-//                System.out.println();
-//
-//                if (string.equals("success")){
-//                    return true;
-//                }
-//            } catch (InterruptedException e) {
-//                exceptions.add(e);
-//                e.printStackTrace();
-//            } catch (Exception e) {
-//                exceptions.add(e);
-//                e.printStackTrace();
-//
-//            }
-            uploadData();
-            return true;
-        }
-
-//        public String uploadFiles() throws IOException {
-//            HttpClient httpclient = HttpClients.createDefault();
-//            HttpPost httppost = new HttpPost("http://www.a-domain.com/foo/");
-//
-//// Request parameters and other properties.
-//            List<NameValuePair> params = new ArrayList<NameValuePair>(2);
-//            params.add(new BasicNameValuePair("param-1", "12345"));
-//            params.add(new BasicNameValuePair("param-2", "Hello!"));
-//
-//
-//
-//            httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
-//
-////Execute and get the response.
-//            HttpResponse response = httpclient.execute(httppost);
-//            HttpEntity entity = response.getEntity();
-//
-//
-//
-//
-//            File file = new File("data.zip");
-//            FileBody fileBody = new FileBody(file, "image/jpg");
-//            MultipartEntity multipartEntity = new MultipartEntity();
-//
-//
-//            MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-//            builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-//            builder.addPart("file", fileBody);
-//            HttpEntity entity = builder.build();
-//
-//            HttpPost request = new HttpPost("http://localhost:8080/upload");
-//            request.setEntity(entity);
-//
-//            HttpClient client = HttpClientBuilder.create().build();
-//
-//
-//
-//            if (entity != null) {
-//                try (InputStream instream = entity.getContent()) {
-//                    // do something useful
-//                    return "success";
-//                }
-//
-//            }
-//            return null;
-//        }
-
-        public String uploadData() {
-
-            try {
-
-                final MediaType MEDIA_TYPE_JPG = MediaType.parse("image/jpeg");
-                final MediaType MEDIA_TYPE_MP4 = MediaType.parse("video/mp4");
-
-
-                RequestBody req = new MultipartBody.Builder().setType(MultipartBody.FORM)
-//                        .addFormDataPart("userid", "8457851245")
-//                        .addFormDataPart("userfile","profile.png", RequestBody.create(MEDIA_TYPE_JPG, file))
-
-                        .addFormDataPart("screenRecording","screenRecording.mp4", RequestBody.create(MEDIA_TYPE_MP4, new File(GlobalVariables.screenRecordingVideoFilePath)))
-                        .addFormDataPart("signature","signature.jpg", RequestBody.create(MEDIA_TYPE_JPG, new File(GlobalVariables.signatureImagePath)))
-                        .addFormDataPart("startingImage","startingImage.jpg", RequestBody.create(MEDIA_TYPE_JPG, new File(GlobalVariables.startingImageFilePath)))
-                        .addFormDataPart("endingImage","endingImage.jpg", RequestBody.create(MEDIA_TYPE_JPG, new File(GlobalVariables.endingImageFilePath)))
-
-                        .addFormDataPart("mobileNumber", GlobalVariables.mobileNumber)
-                        .addFormDataPart("startingLatitude", GlobalVariables.startingLatitudes)
-                        .addFormDataPart("startingLongitude", GlobalVariables.startingLongitudes)
-                        .addFormDataPart("startingDateTime", GlobalVariables.startingTime)
-                        .addFormDataPart("endingLatitude", GlobalVariables.endingLatitudes)
-                        .addFormDataPart("endingLongitude", GlobalVariables.endingLongitudes)
-                        .addFormDataPart("endingDateTime", GlobalVariables.endingTime)
-
-                        .build();
-
-                Request request = new Request.Builder()
-
-                        .url(ApplicationConstants.BASE_URL+"/document/upload")
-
-                        .post(req)
-
-                        .build();
-
-                OkHttpClient client;
-                client = new OkHttpClient.Builder().build();
-                Response response = client.newCall(request).execute();
-
-                Log.d("response", "uploadImage:"+response.body().string());
-                String result = response.body().string();
-//                return new JSONObject(response.body().string());
-                return response.body().string();
-
-            } catch (UnknownHostException | UnsupportedEncodingException e) {
-                exceptions.add(e);
-                Log.e(TAG, "Error: " + e.getLocalizedMessage());
-            } catch (Exception e) {
-                exceptions.add(e);
-                Log.e(TAG, "Other Error: " + e.getLocalizedMessage());
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Boolean flag) {
-            super.onPostExecute(flag);
-
-            if (flag){
-                Toast.makeText(activityWeakReference.get(), "Process completed...", Toast.LENGTH_SHORT).show();
-            } else {
-
-                Toast.makeText(activityWeakReference.get(), "Something went wrong. Please try again.", Toast.LENGTH_SHORT).show();
-                for (Exception e: exceptions){
-                    Toast.makeText(FaceTrackerActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
-                }
-            }
-            finishFaceTrackerActivity();
-
-        }
-    }
 
     /**
      * Restarts the camera.

@@ -484,7 +484,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
     public void onResetSignaturePad(View view) {
         mSignaturePad.clear();
     }
@@ -494,7 +493,7 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Screen recording saved.", Toast.LENGTH_SHORT).show();
             //camera2VideoFragment.stopRecordingVideo();
             onStopScreenRecording(view);
-            Bitmap signBitmap = Utils.rescaleBitmapWidthHeight(mSignaturePad.getSignatureBitmap(), 100);
+            Bitmap signBitmap = Utils.rescaleBitmapWidthHeight(mSignaturePad.getSignatureBitmap(), ApplicationConstants.IMAGE_SIZE);
             GlobalVariables.signatureImagePath = Utils.storeImage(signBitmap, this, 100);
             startActivity();
             finish();

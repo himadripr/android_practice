@@ -3,7 +3,7 @@
     package="info.androidhive.androidcamera">
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -13,8 +13,6 @@
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.SEND_SMS" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
-
-
 
     <uses-feature
         android:name="android.hardware.camera"
@@ -41,7 +39,6 @@
 
         <activity
             android:name=".MainActivity"
-
             android:label="@string/app_name"
             android:theme="@style/Theme.AppCompat.NoActionBar.FullScreen" />
 
@@ -55,7 +52,7 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <service android:name=".utility.GPSTracker"/>
+        <service android:name=".utility.GPSTracker" />
 
         <receiver
             android:name=".receivers.IncomingSms"
@@ -64,8 +61,6 @@
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />
             </intent-filter>
         </receiver>
-
-
 
         <activity android:name=".LaunchingActivity">
             <intent-filter>
@@ -76,8 +71,13 @@
         </activity>
         <activity android:name=".OtpSendAndVerificationActivity" />
         <activity android:name=".MobileNumberGetActivity" />
-        <activity android:name=".face_tracking.FaceTrackerActivity"
+        <activity
+            android:name=".face_tracking.FaceTrackerActivity"
+            android:screenOrientation="nosensor"></activity>
+        <activity android:name=".CompleteSessionActivity"
             android:screenOrientation="nosensor">
+
+
 
         </activity>
     </application>

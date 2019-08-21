@@ -9,6 +9,7 @@ public class GlobalVariables {
     public static String startingTime;
     public static String endingTime;
     public static String screenRecordingVideoFilePath;
+    public static String signedDocumentFilePath;
     public static String startingImageFilePath;
     public static String endingImageFilePath;
     public static String mobileNumber;

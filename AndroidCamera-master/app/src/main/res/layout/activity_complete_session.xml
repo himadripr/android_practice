@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/backgroundgrey"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:weightSum="10"
+    tools:context="info.androidhive.androidcamera.CompleteSessionActivity">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:id="@+id/temp_layout"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_centerHorizontal="true"
+            android:gravity="center"
+            android:textSize="20sp"
+            android:textColor="@android:color/black"
+            android:id="@+id/processing_text_view"
+            android:text="Data upload in process."/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:gravity="center"
+            android:textSize="14sp"
+            android:layout_below="@+id/processing_text_view"
+
+            android:text="Please wait....."/>
+    </RelativeLayout>
+
+
+    <com.wang.avi.AVLoadingIndicatorView
+        android:id="@+id/avindicatorview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="@style/AVLoadingIndicatorView"
+        android:visibility="visible"
+        android:layout_centerInParent="true"
+        app:indicatorName="BallPulseIndicator"
+        app:indicatorColor="@color/colorPrimaryDark"
+    />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="vertical"
+        android:weightSum="10"
+        android:background="@android:color/transparent"
+        android:id="@+id/root_layout"
+        android:visibility="invisible"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_weight="4"
+            android:background="@android:color/transparent"
+            android:padding="10dp"
+            android:layout_height="0dp">
+
+            <android.support.v7.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_gravity="center"
+                android:background="@android:color/white"
+                android:elevation="3dp"
+                card_view:cardCornerRadius="5dp"
+                android:layout_height="match_parent">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:onClick="onViewDocumentClick"
+                    android:background="@android:color/transparent"
+                    android:layout_height="match_parent">
+
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:src="@drawable/document_view_blur1"
+
+                        android:layout_height="match_parent" />
+
+                    <!--<ImageView-->
+                        <!--android:layout_width="match_parent"-->
+                        <!--android:background="#10000000"-->
+                        <!--android:layout_height="match_parent" />-->
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_centerInParent="true"
+                        android:text="View Document"
+                        android:textStyle="bold"
+                        android:textSize="30sp"
+                        android:textColor="@color/colorPrimaryDark"
+                        android:layout_height="wrap_content" />
+
+
+                </RelativeLayout>
+
+            </android.support.v7.widget.CardView>
+
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_weight="4"
+            android:background="@android:color/transparent"
+            android:padding="10dp"
+            android:layout_height="0dp">
+
+            <android.support.v7.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_gravity="center"
+                android:background="@android:color/white"
+                android:elevation="3dp"
+                card_view:cardCornerRadius="5dp"
+                android:layout_height="match_parent">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:onClick="onWatchRecordingClick"
+                    android:background="@android:color/transparent"
+                    android:layout_height="match_parent">
+
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:src="@drawable/watch_video_icon_blur1"
+
+                        android:layout_height="match_parent" />
+
+                    <!--<ImageView-->
+                        <!--android:layout_width="match_parent"-->
+                        <!--android:background="#10000000"-->
+                        <!--android:layout_height="match_parent" />-->
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_centerInParent="true"
+                        android:text="          Watch\nScreen Recording"
+                        android:textSize="30sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/colorPrimaryDark"
+                        android:layout_height="wrap_content" />
+
+
+
+                </RelativeLayout>
+
+
+            </android.support.v7.widget.CardView>
+
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_weight="2"
+            android:padding="10dp"
+            android:background="@android:color/transparent"
+            android:layout_height="0dp">
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_marginTop="10dp"
+                android:layout_centerHorizontal="true"
+                android:id="@+id/button_complete_session"
+                android:onClick="onCompleteSession"
+                android:background="@drawable/button_solid_background"
+                android:padding="16dp"
+
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/white"
+                android:textAllCaps="false"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:textSize="16sp"
+
+                android:text="Complete Session"/>
+        </LinearLayout>
+
+    </LinearLayout>
+</RelativeLayout>
