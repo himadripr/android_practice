@@ -7,7 +7,7 @@
     android:background="@color/backgroundgrey"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    android:weightSum="10"
+
     tools:context="info.androidhive.androidcamera.CompleteSessionActivity">
 
     <RelativeLayout
@@ -60,7 +60,7 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_weight="4"
+            android:layout_weight="3"
             android:background="@android:color/transparent"
             android:padding="10dp"
             android:layout_height="0dp">
@@ -73,17 +73,16 @@
                 card_view:cardCornerRadius="5dp"
                 android:layout_height="match_parent">
 
-                <RelativeLayout
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:weightSum="2"
+                    android:gravity="center"
                     android:layout_width="match_parent"
                     android:onClick="onViewDocumentClick"
                     android:background="@android:color/transparent"
                     android:layout_height="match_parent">
 
-                    <ImageView
-                        android:layout_width="match_parent"
-                        android:src="@drawable/document_view_blur1"
 
-                        android:layout_height="match_parent" />
 
                     <!--<ImageView-->
                         <!--android:layout_width="match_parent"-->
@@ -91,16 +90,27 @@
                         <!--android:layout_height="match_parent" />-->
 
                     <TextView
+                        android:background="@android:color/white"
                         android:layout_width="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:layout_gravity="center"
                         android:layout_centerInParent="true"
-                        android:text="View Document"
+                        android:text="View Signed Document"
                         android:textStyle="bold"
-                        android:textSize="30sp"
+                        android:textSize="25sp"
                         android:textColor="@color/colorPrimaryDark"
                         android:layout_height="wrap_content" />
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:padding="16dp"
+                        android:src="@drawable/document_view"
+                        android:layout_weight="1"
+                        android:layout_gravity="center"
+                        android:layout_height="match_parent" />
 
 
-                </RelativeLayout>
+                </LinearLayout>
 
             </android.support.v7.widget.CardView>
 
@@ -109,7 +119,7 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_weight="4"
+            android:layout_weight="3"
             android:background="@android:color/transparent"
             android:padding="10dp"
             android:layout_height="0dp">
@@ -122,17 +132,16 @@
                 card_view:cardCornerRadius="5dp"
                 android:layout_height="match_parent">
 
-                <RelativeLayout
+                <LinearLayout
                     android:layout_width="match_parent"
+                    android:orientation="horizontal"
+                    android:weightSum="2"
+                    android:gravity="center"
                     android:onClick="onWatchRecordingClick"
                     android:background="@android:color/transparent"
                     android:layout_height="match_parent">
 
-                    <ImageView
-                        android:layout_width="match_parent"
-                        android:src="@drawable/watch_video_icon_blur1"
 
-                        android:layout_height="match_parent" />
 
                     <!--<ImageView-->
                         <!--android:layout_width="match_parent"-->
@@ -141,16 +150,27 @@
 
                     <TextView
                         android:layout_width="wrap_content"
+                        android:background="@android:color/white"
                         android:layout_centerInParent="true"
-                        android:text="          Watch\nScreen Recording"
-                        android:textSize="30sp"
+                        android:layout_weight="1"
+                        android:text="Watch Session Recording"
+                        android:textSize="25sp"
+                        android:layout_gravity="center"
+                        android:gravity="center"
                         android:textStyle="bold"
                         android:textColor="@color/colorPrimaryDark"
                         android:layout_height="wrap_content" />
 
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:src="@drawable/watch_video_icon"
+                        android:layout_weight="1"
+
+                        android:layout_height="match_parent" />
 
 
-                </RelativeLayout>
+
+                </LinearLayout>
 
 
             </android.support.v7.widget.CardView>
@@ -160,13 +180,14 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_weight="2"
+            android:layout_weight="4"
             android:padding="10dp"
             android:background="@android:color/transparent"
             android:layout_height="0dp">
 
             <Button
                 android:layout_width="match_parent"
+                android:layout_gravity="bottom"
                 android:layout_marginTop="10dp"
                 android:layout_centerHorizontal="true"
                 android:id="@+id/button_complete_session"
