@@ -6,6 +6,15 @@ import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.android.volley.NoConnectionError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.TimeoutError;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.HurlStack;
+import com.android.volley.toolbox.Volley;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -14,7 +23,11 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import info.androidhive.androidcamera.ApplicationConstants;
+import info.androidhive.androidcamera.MainActivity;
 import info.androidhive.androidcamera.R;
+import info.androidhive.androidcamera.enums.ConnectionEnums;
+import info.androidhive.androidcamera.interfaces.ProcessAfterCheckingInternetConnection;
 
 public class Utils {
 
@@ -126,5 +139,36 @@ public class Utils {
             e.printStackTrace();
         }
 
+    }
+
+    public static void isInternetConnectionAvailable(final ProcessAfterCheckingInternetConnection processAfterCheckingInternetConnection, Context context){
+        String url = ApplicationConstants.BASE_URL;
+        InputStreamVolleyRequest request = new InputStreamVolleyRequest(Request.Method.GET, url,
+                new Response.Listener<byte[]>() {
+                    @Override
+                    public void onResponse(byte[] response) {
+                        // TODO handle the response
+                        processAfterCheckingInternetConnection.processRequest(true, null);
+
+                    }
+                } ,new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                // TODO handle the error
+
+                if (error instanceof NoConnectionError) {
+                    processAfterCheckingInternetConnection.processRequest(false, ConnectionEnums.NO_INTERNET_CONNECTION);
+                } else if (error instanceof TimeoutError){
+                    processAfterCheckingInternetConnection.processRequest(false, ConnectionEnums.SERVER_DOWN);
+                } else {
+                    processAfterCheckingInternetConnection.processRequest(true, null);
+                }
+
+                error.printStackTrace();
+            }
+        }, null);
+        RequestQueue mRequestQueue = Volley.newRequestQueue(context.getApplicationContext(), new HurlStack());
+        mRequestQueue.add(request);
     }
 }

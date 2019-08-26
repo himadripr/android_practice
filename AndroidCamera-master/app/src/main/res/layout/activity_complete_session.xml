@@ -205,5 +205,28 @@
                 android:text="Complete Session"/>
         </LinearLayout>
 
+
+
     </LinearLayout>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_gravity="bottom"
+        android:layout_margin="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/button_submit"
+        android:onClick="onSubmit"
+        android:background="@drawable/button_solid_background"
+        android:padding="16dp"
+
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/white"
+        android:textAllCaps="false"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:textSize="16sp"
+
+        android:text="@string/submit"/>
 </RelativeLayout>

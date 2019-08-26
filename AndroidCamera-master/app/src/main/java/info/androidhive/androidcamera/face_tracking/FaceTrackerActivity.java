@@ -75,17 +75,9 @@ import info.androidhive.androidcamera.CompleteSessionActivity;
 import info.androidhive.androidcamera.GlobalVariables;
 import info.androidhive.androidcamera.MainActivity;
 import info.androidhive.androidcamera.R;
-import info.androidhive.androidcamera.interfaces.PostCallResponseHandler;
-import info.androidhive.androidcamera.utility.AsyncPostCall;
 import info.androidhive.androidcamera.utility.GPSTracker;
-import info.androidhive.androidcamera.utility.InputStreamVolleyRequest;
+
 import info.androidhive.androidcamera.utility.Utils;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 /**
  * Activity for the face tracker app.  This app detects faces with the rear facing camera, and draws

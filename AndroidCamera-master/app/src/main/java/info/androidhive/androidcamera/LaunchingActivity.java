@@ -11,7 +11,10 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
+import info.androidhive.androidcamera.enums.ConnectionEnums;
 import info.androidhive.androidcamera.face_tracking.FaceTrackerActivity;
+import info.androidhive.androidcamera.interfaces.ProcessAfterCheckingInternetConnection;
+import info.androidhive.androidcamera.utility.Utils;
 
 
 public class LaunchingActivity extends AppCompatActivity {
@@ -82,15 +85,41 @@ public class LaunchingActivity extends AppCompatActivity {
                     MY_PERMISSIONS_REQUEST_ACCESS_FINE_COARSE_LOCATION);
         }
         else {
-            startAction();
+            checkInternetConnection();
         }
 
     }
 
+    private void checkInternetConnection(){
+        Utils.isInternetConnectionAvailable(new ProcessAfterCheckingInternetConnection() {
+            @Override
+            public void processRequest(boolean connectionStatus, ConnectionEnums connectionEnums) {
+                if (connectionStatus){
+                    startAction();
+                } else {
+                    GlobalVariables.connectionEnums = connectionEnums;
+                    switch (connectionEnums){
+                        case NO_INTERNET_CONNECTION:
+                            Toast.makeText(LaunchingActivity.this, "no internet connection", Toast.LENGTH_LONG).show();
+                            break;
+                        case SERVER_DOWN:
+                            Toast.makeText(LaunchingActivity.this, "unable to connect to server", Toast.LENGTH_LONG).show();
+                            break;
+                        default:
+                            Toast.makeText(LaunchingActivity.this, "some unknown problem while connection", Toast.LENGTH_LONG).show();
+
+                    }
+                    startActivity(new Intent(LaunchingActivity.this, ConnectionFailureActivity.class));
+                    LaunchingActivity.this.finish();
+                }
+            }
+        }, getApplicationContext());
+    }
+
     private void startAction(){
 
-        configureSettings();
-        readSms();
+        //configureSettings();
+//        readSms();
         startActivityForResult(new Intent(LaunchingActivity.this,
                         MobileNumberGetActivity.class),
                 MainActivity.REQUEST_CODE_CAPTURE_PERM);

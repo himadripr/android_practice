@@ -1,34 +1,21 @@
 package info.androidhive.androidcamera;
 
-import android.Manifest;
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.graphics.Bitmap;
-import android.graphics.SurfaceTexture;
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraCaptureSession;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraDevice;
-import android.hardware.camera2.CameraManager;
-import android.hardware.camera2.CaptureRequest;
-import android.hardware.camera2.params.StreamConfigurationMap;
 import android.hardware.display.DisplayManager;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
-import android.media.MediaRecorder;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.Looper;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -37,27 +24,23 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.util.Size;
-import android.util.SparseIntArray;
 import android.view.Display;
 import android.view.Surface;
-import android.view.TextureView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.android.volley.NoConnectionError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.HurlStack;
 import com.android.volley.toolbox.Volley;
 import com.github.barteksc.pdfviewer.PDFView;
 import com.github.gcacace.signaturepad.views.SignaturePad;
-import com.google.gson.JsonObject;
-import com.koushikdutta.async.future.FutureCallback;
-import com.koushikdutta.ion.Ion;
 
 //import org.apache.pdfbox.pdmodel.PDDocument;
 //import org.apache.pdfbox.pdmodel.PDPage;
@@ -67,24 +50,20 @@ import com.koushikdutta.ion.Ion;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 
 
+import info.androidhive.androidcamera.enums.ConnectionEnums;
 import info.androidhive.androidcamera.face_tracking.FaceTrackerActivity;
 import info.androidhive.androidcamera.utility.*;
 import info.androidhive.androidcamera.video_recording.Camera2VideoFragment;
 
 public class MainActivity extends AppCompatActivity {
     public static final int REQUEST_CODE_CAPTURE_PERM = 1234;
-    private MediaProjectionManager mMediaProjectionManager;
+    private MediaProjectionManager mProjectionManager;
+    private int mScreenDensity;
     SignaturePad mSignaturePad;
     PDFView pdfView;
     // Activity request codes
@@ -111,8 +90,8 @@ public class MainActivity extends AppCompatActivity {
     //Camera2VideoFragment camera2VideoFragment;
 
     private static final String VIDEO_MIME_TYPE = "video/avc";
-    private static final int VIDEO_WIDTH = 1280;
-    private static final int VIDEO_HEIGHT = 720;
+    private static final int VIDEO_WIDTH = 720;
+    private static final int VIDEO_HEIGHT = 1280;
     private Button saveButton;
     private boolean isPadSigned = false;
     //
@@ -133,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
     };
     private String filePathForScreenRecordingVideo="";
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    //@TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -152,7 +131,7 @@ public class MainActivity extends AppCompatActivity {
             finish();
         }
 
-        mMediaProjectionManager = (MediaProjectionManager)getSystemService(android.content.Context.MEDIA_PROJECTION_SERVICE);
+        mProjectionManager = (MediaProjectionManager)getSystemService(android.content.Context.MEDIA_PROJECTION_SERVICE);
         saveButton = findViewById(R.id.saveButton);
         mSignaturePad = (SignaturePad) findViewById(R.id.signature_pad);
         mSignaturePad.setOnSignedListener(new SignaturePad.OnSignedListener() {
@@ -209,7 +188,7 @@ public class MainActivity extends AppCompatActivity {
                         } catch (Exception e) {
                             // TODO Auto-generated catch block
                             Log.d("KEY_ERROR", "UNABLE TO DOWNLOAD FILE");
-                            Toast.makeText(MainActivity.this, "Unable to download file", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, "Some problem in file downloading.", Toast.LENGTH_SHORT).show();
                             MainActivity.this.finish();
                             progressDialog.dismiss();
                             e.printStackTrace();
@@ -221,7 +200,15 @@ public class MainActivity extends AppCompatActivity {
             public void onErrorResponse(VolleyError error) {
                 // TODO handle the error
                 progressDialog.dismiss();
-                Toast.makeText(MainActivity.this, "Unable to download file", Toast.LENGTH_SHORT).show();
+                GlobalVariables.connectionEnums = ConnectionEnums.SERVER_DOWN;
+                if (error instanceof NoConnectionError) {
+                    GlobalVariables.connectionEnums = ConnectionEnums.NO_INTERNET_CONNECTION;
+                    Toast.makeText(MainActivity.this, "No internet connection.", Toast.LENGTH_LONG).show();
+                } else if (error instanceof TimeoutError){
+                    Toast.makeText(MainActivity.this, "Unable to connect to server.", Toast.LENGTH_LONG).show();
+                }
+                startActivity(new Intent(MainActivity.this, ConnectionFailureActivity.class));
+               // Toast.makeText(MainActivity.this, "Unable to download file", Toast.LENGTH_SHORT).show();
                 MainActivity.this.finish();
                 error.printStackTrace();
             }
@@ -262,7 +249,7 @@ public class MainActivity extends AppCompatActivity {
                         } catch (Exception e) {
                             // TODO Auto-generated catch block
                             Log.d("KEY_ERROR", "UNABLE TO DOWNLOAD FILE");
-                            Toast.makeText(MainActivity.this, "Unable to download file", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, "Some problem in file downloading.", Toast.LENGTH_SHORT).show();
                             MainActivity.this.finish();
                             progressDialog.dismiss();
                             e.printStackTrace();
@@ -274,7 +261,15 @@ public class MainActivity extends AppCompatActivity {
             public void onErrorResponse(VolleyError error) {
                 // TODO handle the error
                 progressDialog.dismiss();
-                Toast.makeText(MainActivity.this, "Unable to download file", Toast.LENGTH_SHORT).show();
+                GlobalVariables.connectionEnums = ConnectionEnums.SERVER_DOWN;
+                if (error instanceof NoConnectionError) {
+                    Toast.makeText(MainActivity.this, "No internet connection.", Toast.LENGTH_LONG).show();
+                    GlobalVariables.connectionEnums = ConnectionEnums.NO_INTERNET_CONNECTION;
+                } else if (error instanceof TimeoutError){
+                    Toast.makeText(MainActivity.this, "Unable to connect to server.", Toast.LENGTH_LONG).show();
+                }
+                startActivity(new Intent(MainActivity.this, ConnectionFailureActivity.class));
+               // Toast.makeText(MainActivity.this, "Unable to download file", Toast.LENGTH_SHORT).show();
                 MainActivity.this.finish();
                 error.printStackTrace();
             }
@@ -285,9 +280,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    //@TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public void onStartScreenRecording(View view) {
-        Intent permissionIntent = mMediaProjectionManager.createScreenCaptureIntent();
+        Intent permissionIntent = mProjectionManager.createScreenCaptureIntent();
         startActivityForResult(permissionIntent, REQUEST_CODE_CAPTURE_PERM);
     }
 
@@ -296,7 +291,7 @@ public class MainActivity extends AppCompatActivity {
         releaseEncoders();
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    //@TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private void startScreenRecording() {
 
 
@@ -357,7 +352,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+//    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private void releaseEncoders() {
         mDrainHandler.removeCallbacks(mDrainEncoderRunnable);
         if (mMuxer != null) {
@@ -386,7 +381,7 @@ public class MainActivity extends AppCompatActivity {
         mTrackIndex = -1;
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    //@TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private boolean drainEncoder() {
         mDrainHandler.removeCallbacks(mDrainEncoderRunnable);
         while (true) {
@@ -466,12 +461,12 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Activity result method will be called after closing the camera
      */
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    //@TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
          if (REQUEST_CODE_CAPTURE_PERM == requestCode) {
             if (resultCode == RESULT_OK) {
-                mMediaProjection = (MediaProjection) mMediaProjectionManager.getMediaProjection(resultCode, data);
+                mMediaProjection = (MediaProjection) mProjectionManager.getMediaProjection(resultCode, data);
                 //camera2VideoFragment.startRecordingVideo();
 
                 startScreenRecording(); // defined below
@@ -605,4 +600,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onBackPressed() {
+
+    }
 }

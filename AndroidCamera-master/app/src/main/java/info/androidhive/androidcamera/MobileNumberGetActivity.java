@@ -128,6 +128,7 @@ public class MobileNumberGetActivity extends AppCompatActivity {
         public void onFinish() {
             hint = invisible_mobile_number_hint.getHint().toString();
             hint = removeSpcaesAndFirst0FromTheMobileNumberHint(hint);
+            edtPhoneNumber.setText("");
             edtPhoneNumber.setHint(hint);
             progressDialog.dismiss();
         }

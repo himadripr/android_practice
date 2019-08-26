@@ -49,7 +49,7 @@
             android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths" />
+                android:resource="@xml/provider_paths" />
         </provider>
 
         <service android:name=".utility.GPSTracker" />
@@ -62,6 +62,16 @@
             </intent-filter>
         </receiver>
 
+        <provider
+            android:name=".utility.GenericFileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths"/>
+        </provider>
+
         <activity android:name=".LaunchingActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -73,13 +83,11 @@
         <activity android:name=".MobileNumberGetActivity" />
         <activity
             android:name=".face_tracking.FaceTrackerActivity"
+            android:screenOrientation="nosensor" />
+        <activity
+            android:name=".CompleteSessionActivity"
             android:screenOrientation="nosensor"></activity>
-        <activity android:name=".CompleteSessionActivity"
-            android:screenOrientation="nosensor">
-
-
-
-        </activity>
+        <activity android:name=".ConnectionFailureActivity"></activity>
     </application>
 
 </manifest>

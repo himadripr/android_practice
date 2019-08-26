@@ -1,5 +1,7 @@
 package info.androidhive.androidcamera;
 
+import info.androidhive.androidcamera.enums.ConnectionEnums;
+
 public class GlobalVariables {
     public static String startingLatitudes;
     public static String startingLongitudes;
@@ -13,5 +15,6 @@ public class GlobalVariables {
     public static String startingImageFilePath;
     public static String endingImageFilePath;
     public static String mobileNumber;
+    public static ConnectionEnums connectionEnums;
 
 }
