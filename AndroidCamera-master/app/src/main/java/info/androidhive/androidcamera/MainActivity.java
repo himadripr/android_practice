@@ -1,34 +1,20 @@
 package info.androidhive.androidcamera;
 
-import android.annotation.TargetApi;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.hardware.display.DisplayManager;
-import android.media.MediaCodec;
-import android.media.MediaCodecInfo;
-import android.media.MediaFormat;
-import android.media.MediaMuxer;
-import android.media.projection.MediaProjection;
-import android.media.projection.MediaProjectionManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Display;
-import android.view.Surface;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.android.volley.NoConnectionError;
@@ -41,6 +27,7 @@ import com.android.volley.toolbox.HurlStack;
 import com.android.volley.toolbox.Volley;
 import com.github.barteksc.pdfviewer.PDFView;
 import com.github.gcacace.signaturepad.views.SignaturePad;
+import com.wang.avi.AVLoadingIndicatorView;
 
 //import org.apache.pdfbox.pdmodel.PDDocument;
 //import org.apache.pdfbox.pdmodel.PDPage;
@@ -49,8 +36,6 @@ import com.github.gcacace.signaturepad.views.SignaturePad;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,23 +46,16 @@ import info.androidhive.androidcamera.utility.*;
 import info.androidhive.androidcamera.video_recording.Camera2VideoFragment;
 
 public class MainActivity extends AppCompatActivity {
-    public static final int REQUEST_CODE_CAPTURE_PERM = 1234;
-    private MediaProjectionManager mProjectionManager;
-    private int mScreenDensity;
+//    public static final int REQUEST_CODE_CAPTURE_PERM = 1234;
+//    private MediaProjectionManager mProjectionManager;
+//    private int mScreenDensity;
     SignaturePad mSignaturePad;
     PDFView pdfView;
+    RelativeLayout inner_layout;
     // Activity request codes
-    private static final int CAMERA_CAPTURE_IMAGE_REQUEST_CODE = 100;
-    private static final int CAMERA_CAPTURE_VIDEO_REQUEST_CODE = 200;
-
-    // key to store image path in savedInstance state
-    public static final String KEY_IMAGE_STORAGE_PATH = "image_path";
 
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static final int MEDIA_TYPE_VIDEO = 2;
-
-    // Bitmap sampling size
-    public static final int BITMAP_SAMPLE_SIZE = 8;
 
     // Gallery directory name to store the images or videos
     public static final String GALLERY_DIRECTORY_NAME = "Hello Camera";
@@ -89,28 +67,30 @@ public class MainActivity extends AppCompatActivity {
     //ViewPager viewPager;
     //Camera2VideoFragment camera2VideoFragment;
 
-    private static final String VIDEO_MIME_TYPE = "video/avc";
-    private static final int VIDEO_WIDTH = 720;
-    private static final int VIDEO_HEIGHT = 1280;
+//    private static final String VIDEO_MIME_TYPE = "video/avc";
+//    private static final int VIDEO_WIDTH = 720;
+//    private static final int VIDEO_HEIGHT = 1280;
     private Button saveButton;
     private boolean isPadSigned = false;
     //
     private boolean mMuxerStarted = false;
-    private MediaProjection mMediaProjection;
-    private Surface mInputSurface;
-    private MediaMuxer mMuxer;
-    private MediaCodec mVideoEncoder;
-    private MediaCodec.BufferInfo mVideoBufferInfo;
+    //private MediaProjection mMediaProjection;
+    //private Surface mInputSurface;
+    //private MediaMuxer mMuxer;
+    //private MediaCodec mVideoEncoder;
+    //private MediaCodec.BufferInfo mVideoBufferInfo;
     private int mTrackIndex = -1;
     private ProgressDialog progressDialog;
-    private final Handler mDrainHandler = new Handler(Looper.getMainLooper());
-    private Runnable mDrainEncoderRunnable = new Runnable() {
-        @Override
-        public void run() {
-            drainEncoder();
-        }
-    };
-    private String filePathForScreenRecordingVideo="";
+    private Button reset_button;
+    private AVLoadingIndicatorView avindicatorview;
+    //private final Handler mDrainHandler = new Handler(Looper.getMainLooper());
+//    private Runnable mDrainEncoderRunnable = new Runnable() {
+//        @Override
+//        public void run() {
+//            drainEncoder();
+//        }
+//    };
+    //private String filePathForScreenRecordingVideo="";
 
     //@TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
@@ -131,9 +111,13 @@ public class MainActivity extends AppCompatActivity {
             finish();
         }
 
-        mProjectionManager = (MediaProjectionManager)getSystemService(android.content.Context.MEDIA_PROJECTION_SERVICE);
-        saveButton = findViewById(R.id.saveButton);
+        //mProjectionManager = (MediaProjectionManager)getSystemService(android.content.Context.MEDIA_PROJECTION_SERVICE);
+        saveButton = findViewById(R.id.save_button);
+        reset_button = findViewById(R.id.reset_button);
         mSignaturePad = (SignaturePad) findViewById(R.id.signature_pad);
+        inner_layout = findViewById(R.id.inner_layout);
+        avindicatorview = findViewById(R.id.avindicatorview);
+        avindicatorview.show();
         mSignaturePad.setOnSignedListener(new SignaturePad.OnSignedListener() {
 
             @Override
@@ -154,7 +138,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        downloadSampleVideoToDisplayForScreenRecording();
+        //downloadSampleVideoToDisplayForScreenRecording();
+        downloadFileForTheGivenMobileNumber();
         //viewPager = (ViewPager) findViewById(R.id.viewpagercamera);
         //camera2VideoFragment = Camera2VideoFragment.newInstance();
 
@@ -162,63 +147,63 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void downloadSampleVideoToDisplayForScreenRecording(){
-        progressDialog = ProgressDialog.show(this, "", "Downloading File...");
-        String url = ApplicationConstants.BASE_URL+"/getDocument/samplevideo";
-        InputStreamVolleyRequest request = new InputStreamVolleyRequest(Request.Method.GET, url,
-                new Response.Listener<byte[]>() {
-                    @Override
-                    public void onResponse(byte[] response) {
-                        // TODO handle the response
-                        progressDialog.dismiss();
-                        try {
-                            if (response!=null) {
-                                FileOutputStream outputStream;
-                                String fileName = Utils.getRootPathOfApp(getApplicationContext());
-                                String timeStamp = String.valueOf(System.currentTimeMillis());
-                                filePathForScreenRecordingVideo = fileName+"/"+"Screen_recording_"+timeStamp+".mp4";
-                                File file = new File(filePathForScreenRecordingVideo);
-                                GlobalVariables.screenRecordingVideoFilePath = filePathForScreenRecordingVideo;
-                                file.createNewFile();
-                                outputStream = new FileOutputStream(file);
-                                outputStream.write(response);
-                                outputStream.close();
-                                downloadFileForTheGivenMobileNumber();
-                            }
-                        } catch (Exception e) {
-                            // TODO Auto-generated catch block
-                            Log.d("KEY_ERROR", "UNABLE TO DOWNLOAD FILE");
-                            Toast.makeText(MainActivity.this, "Some problem in file downloading.", Toast.LENGTH_SHORT).show();
-                            MainActivity.this.finish();
-                            progressDialog.dismiss();
-                            e.printStackTrace();
-                        }
-                    }
-                } ,new Response.ErrorListener() {
-
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                // TODO handle the error
-                progressDialog.dismiss();
-                GlobalVariables.connectionEnums = ConnectionEnums.SERVER_DOWN;
-                if (error instanceof NoConnectionError) {
-                    GlobalVariables.connectionEnums = ConnectionEnums.NO_INTERNET_CONNECTION;
-                    Toast.makeText(MainActivity.this, "No internet connection.", Toast.LENGTH_LONG).show();
-                } else if (error instanceof TimeoutError){
-                    Toast.makeText(MainActivity.this, "Unable to connect to server.", Toast.LENGTH_LONG).show();
-                }
-                startActivity(new Intent(MainActivity.this, ConnectionFailureActivity.class));
-               // Toast.makeText(MainActivity.this, "Unable to download file", Toast.LENGTH_SHORT).show();
-                MainActivity.this.finish();
-                error.printStackTrace();
-            }
-        }, null);
-        RequestQueue mRequestQueue = Volley.newRequestQueue(getApplicationContext(), new HurlStack());
-        mRequestQueue.add(request);
-    }
+//    private void downloadSampleVideoToDisplayForScreenRecording(){
+//        progressDialog = ProgressDialog.show(this, "", "Downloading File...");
+//        String url = ApplicationConstants.BASE_URL+"/getDocument/samplevideo";
+//        InputStreamVolleyRequest request = new InputStreamVolleyRequest(Request.Method.GET, url,
+//                new Response.Listener<byte[]>() {
+//                    @Override
+//                    public void onResponse(byte[] response) {
+//                        // TODO handle the response
+//                        progressDialog.dismiss();
+//                        try {
+//                            if (response!=null) {
+//                                FileOutputStream outputStream;
+//                                String fileName = Utils.getRootPathOfApp(getApplicationContext());
+//                                String timeStamp = String.valueOf(System.currentTimeMillis());
+//                                filePathForScreenRecordingVideo = fileName+"/"+"Screen_recording_"+timeStamp+".mp4";
+//                                File file = new File(filePathForScreenRecordingVideo);
+//                                GlobalVariables.screenRecordingVideoFilePath = filePathForScreenRecordingVideo;
+//                                file.createNewFile();
+//                                outputStream = new FileOutputStream(file);
+//                                outputStream.write(response);
+//                                outputStream.close();
+//                                downloadFileForTheGivenMobileNumber();
+//                            }
+//                        } catch (Exception e) {
+//                            // TODO Auto-generated catch block
+//                            Log.d("KEY_ERROR", "UNABLE TO DOWNLOAD FILE");
+//                            Toast.makeText(MainActivity.this, "Some problem in file downloading.", Toast.LENGTH_SHORT).show();
+//                            MainActivity.this.finish();
+//                            progressDialog.dismiss();
+//                            e.printStackTrace();
+//                        }
+//                    }
+//                } ,new Response.ErrorListener() {
+//
+//            @Override
+//            public void onErrorResponse(VolleyError error) {
+//                // TODO handle the error
+//                progressDialog.dismiss();
+//                GlobalVariables.connectionEnums = ConnectionEnums.SERVER_DOWN;
+//                if (error instanceof NoConnectionError) {
+//                    GlobalVariables.connectionEnums = ConnectionEnums.NO_INTERNET_CONNECTION;
+//                    Toast.makeText(MainActivity.this, "No internet connection.", Toast.LENGTH_LONG).show();
+//                } else if (error instanceof TimeoutError){
+//                    Toast.makeText(MainActivity.this, "Unable to connect to server.", Toast.LENGTH_LONG).show();
+//                }
+//                startActivity(new Intent(MainActivity.this, ConnectionFailureActivity.class));
+//               // Toast.makeText(MainActivity.this, "Unable to download file", Toast.LENGTH_SHORT).show();
+//                MainActivity.this.finish();
+//                error.printStackTrace();
+//            }
+//        }, null);
+//        RequestQueue mRequestQueue = Volley.newRequestQueue(getApplicationContext(), new HurlStack());
+//        mRequestQueue.add(request);
+//    }
 
     private void downloadFileForTheGivenMobileNumber(){
-
+        progressDialog = ProgressDialog.show(this, "", "Downloading File...");
         //MyCountDownTimer myCountDownTimer = new MyCountDownTimer(1000, 500);
         //myCountDownTimer.start();
         String url = ApplicationConstants.BASE_URL+"/getDocument/"+getIntent().getStringExtra(ApplicationConstants.COUNTRY_CODE)+"/"+
@@ -280,159 +265,159 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    //@TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public void onStartScreenRecording(View view) {
-        Intent permissionIntent = mProjectionManager.createScreenCaptureIntent();
-        startActivityForResult(permissionIntent, REQUEST_CODE_CAPTURE_PERM);
-    }
+//    //@TargetApi(Build.VERSION_CODES.LOLLIPOP)
+//    public void onStartScreenRecording(View view) {
+//        Intent permissionIntent = mProjectionManager.createScreenCaptureIntent();
+//        startActivityForResult(permissionIntent, REQUEST_CODE_CAPTURE_PERM);
+//    }
 
 
-    public void onStopScreenRecording(View v) {
-        releaseEncoders();
-    }
+//    public void onStopScreenRecording(View v) {
+//        releaseEncoders();
+//    }
 
-    //@TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private void startScreenRecording() {
-
-
-        DisplayManager dm = (DisplayManager)getSystemService(Context.DISPLAY_SERVICE);
-        Display defaultDisplay = dm.getDisplay(Display.DEFAULT_DISPLAY);
-        if (defaultDisplay == null) {
-            throw new RuntimeException("No display found.");
-        }
-        prepareVideoEncoder();
-
-        try {
-
-            //mMuxer = new MediaMuxer("/storage/emulated/0/DCIM/Camera/video.mp4", MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
-            mMuxer = new MediaMuxer(filePathForScreenRecordingVideo, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
-        } catch (IOException ioe) {
-            throw new RuntimeException("MediaMuxer creation failed", ioe);
-        }
-
-        // Get the display size and density.
-        DisplayMetrics metrics = getResources().getDisplayMetrics();
-        int screenWidth = metrics.widthPixels;
-        int screenHeight = metrics.heightPixels;
-        int screenDensity = metrics.densityDpi;
-
-        // Start the video input.
-        mMediaProjection.createVirtualDisplay("Recording Display", screenWidth,
-                screenHeight, screenDensity, 0 /* flags */, mInputSurface,
-                null /* callback */, null /* handler */);
-
-        // Start the encoders
-        drainEncoder();
-    }
-
-     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private void prepareVideoEncoder() {
-        mVideoBufferInfo = new MediaCodec.BufferInfo();
-        MediaFormat format = MediaFormat.createVideoFormat(VIDEO_MIME_TYPE, VIDEO_WIDTH, VIDEO_HEIGHT);
-        int frameRate = 30; // 30 fps
-
-        // Set some required properties. The media codec may fail if these aren't defined.
-        format.setInteger(MediaFormat.KEY_COLOR_FORMAT,
-                MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface);
-        format.setInteger(MediaFormat.KEY_BIT_RATE, 6000000); // 6Mbps
-        format.setInteger(MediaFormat.KEY_FRAME_RATE, frameRate);
-        format.setInteger(MediaFormat.KEY_CAPTURE_RATE, frameRate);
-        format.setInteger(MediaFormat.KEY_REPEAT_PREVIOUS_FRAME_AFTER, 1000000 / frameRate);
-        format.setInteger(MediaFormat.KEY_CHANNEL_COUNT, 1);
-        format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1); // 1 seconds between I-frames
-
-        // Create a MediaCodec encoder and configure it. Get a Surface we can use for recording into.
-        try {
-            mVideoEncoder = MediaCodec.createEncoderByType(VIDEO_MIME_TYPE);
-            mVideoEncoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
-            mInputSurface = mVideoEncoder.createInputSurface();
-            mVideoEncoder.start();
-        } catch (IOException e) {
-            releaseEncoders();
-        }
-    }
-
-//    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private void releaseEncoders() {
-        mDrainHandler.removeCallbacks(mDrainEncoderRunnable);
-        if (mMuxer != null) {
-            if (mMuxerStarted) {
-                mMuxer.stop();
-            }
-            mMuxer.release();
-            mMuxer = null;
-            mMuxerStarted = false;
-        }
-        if (mVideoEncoder != null) {
-            mVideoEncoder.stop();
-            mVideoEncoder.release();
-            mVideoEncoder = null;
-        }
-        if (mInputSurface != null) {
-            mInputSurface.release();
-            mInputSurface = null;
-        }
-        if (mMediaProjection != null) {
-            mMediaProjection.stop();
-            mMediaProjection = null;
-        }
-        mVideoBufferInfo = null;
-        mDrainEncoderRunnable = null;
-        mTrackIndex = -1;
-    }
-
-    //@TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private boolean drainEncoder() {
-        mDrainHandler.removeCallbacks(mDrainEncoderRunnable);
-        while (true) {
-            int bufferIndex = mVideoEncoder.dequeueOutputBuffer(mVideoBufferInfo, 0);
-
-            if (bufferIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
-                // nothing available yet
-                break;
-            } else if (bufferIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
-                // should happen before receiving buffers, and should only happen once
-                if (mTrackIndex >= 0) {
-                    throw new RuntimeException("format changed twice");
-                }
-                mTrackIndex = mMuxer.addTrack(mVideoEncoder.getOutputFormat());
-                if (!mMuxerStarted && mTrackIndex >= 0) {
-                    mMuxer.start();
-                    mMuxerStarted = true;
-                }
-            } else if (bufferIndex < 0) {
-                // not sure what's going on, ignore it
-            } else {
-                ByteBuffer encodedData = mVideoEncoder.getOutputBuffer(bufferIndex);
-                if (encodedData == null) {
-                    throw new RuntimeException("couldn't fetch buffer at index " + bufferIndex);
-                }
-
-                if ((mVideoBufferInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
-                    mVideoBufferInfo.size = 0;
-                }
-
-                if (mVideoBufferInfo.size != 0) {
-                    if (mMuxerStarted) {
-                        encodedData.position(mVideoBufferInfo.offset);
-                        encodedData.limit(mVideoBufferInfo.offset + mVideoBufferInfo.size);
-                        mMuxer.writeSampleData(mTrackIndex, encodedData, mVideoBufferInfo);
-                    } else {
-                        // muxer not started
-                    }
-                }
-
-                mVideoEncoder.releaseOutputBuffer(bufferIndex, false);
-
-                if ((mVideoBufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-                    break;
-                }
-            }
-        }
-
-        mDrainHandler.postDelayed(mDrainEncoderRunnable, 10);
-        return false;
-    }
+//    //@TargetApi(Build.VERSION_CODES.LOLLIPOP)
+//    private void startScreenRecording() {
+//
+//
+//        DisplayManager dm = (DisplayManager)getSystemService(Context.DISPLAY_SERVICE);
+//        Display defaultDisplay = dm.getDisplay(Display.DEFAULT_DISPLAY);
+//        if (defaultDisplay == null) {
+//            throw new RuntimeException("No display found.");
+//        }
+//        prepareVideoEncoder();
+//
+//        try {
+//
+//            //mMuxer = new MediaMuxer("/storage/emulated/0/DCIM/Camera/video.mp4", MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
+//            mMuxer = new MediaMuxer(filePathForScreenRecordingVideo, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
+//        } catch (IOException ioe) {
+//            throw new RuntimeException("MediaMuxer creation failed", ioe);
+//        }
+//
+//        // Get the display size and density.
+//        DisplayMetrics metrics = getResources().getDisplayMetrics();
+//        int screenWidth = metrics.widthPixels;
+//        int screenHeight = metrics.heightPixels;
+//        int screenDensity = metrics.densityDpi;
+//
+//        // Start the video input.
+//        mMediaProjection.createVirtualDisplay("Recording Display", screenWidth,
+//                screenHeight, screenDensity, 0 /* flags */, mInputSurface,
+//                null /* callback */, null /* handler */);
+//
+//        // Start the encoders
+//        drainEncoder();
+//    }
+//
+//     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+//    private void prepareVideoEncoder() {
+//        mVideoBufferInfo = new MediaCodec.BufferInfo();
+//        MediaFormat format = MediaFormat.createVideoFormat(VIDEO_MIME_TYPE, VIDEO_WIDTH, VIDEO_HEIGHT);
+//        int frameRate = 30; // 30 fps
+//
+//        // Set some required properties. The media codec may fail if these aren't defined.
+//        format.setInteger(MediaFormat.KEY_COLOR_FORMAT,
+//                MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface);
+//        format.setInteger(MediaFormat.KEY_BIT_RATE, 6000000); // 6Mbps
+//        format.setInteger(MediaFormat.KEY_FRAME_RATE, frameRate);
+//        format.setInteger(MediaFormat.KEY_CAPTURE_RATE, frameRate);
+//        format.setInteger(MediaFormat.KEY_REPEAT_PREVIOUS_FRAME_AFTER, 1000000 / frameRate);
+//        format.setInteger(MediaFormat.KEY_CHANNEL_COUNT, 1);
+//        format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1); // 1 seconds between I-frames
+//
+//        // Create a MediaCodec encoder and configure it. Get a Surface we can use for recording into.
+//        try {
+//            mVideoEncoder = MediaCodec.createEncoderByType(VIDEO_MIME_TYPE);
+//            mVideoEncoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
+//            mInputSurface = mVideoEncoder.createInputSurface();
+//            mVideoEncoder.start();
+//        } catch (IOException e) {
+//            releaseEncoders();
+//        }
+//    }
+//
+////    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+//    private void releaseEncoders() {
+//        mDrainHandler.removeCallbacks(mDrainEncoderRunnable);
+//        if (mMuxer != null) {
+//            if (mMuxerStarted) {
+//                mMuxer.stop();
+//            }
+//            mMuxer.release();
+//            mMuxer = null;
+//            mMuxerStarted = false;
+//        }
+//        if (mVideoEncoder != null) {
+//            mVideoEncoder.stop();
+//            mVideoEncoder.release();
+//            mVideoEncoder = null;
+//        }
+//        if (mInputSurface != null) {
+//            mInputSurface.release();
+//            mInputSurface = null;
+//        }
+//        if (mMediaProjection != null) {
+//            mMediaProjection.stop();
+//            mMediaProjection = null;
+//        }
+//        mVideoBufferInfo = null;
+//        mDrainEncoderRunnable = null;
+//        mTrackIndex = -1;
+//    }
+//
+//    //@TargetApi(Build.VERSION_CODES.LOLLIPOP)
+//    private boolean drainEncoder() {
+//        mDrainHandler.removeCallbacks(mDrainEncoderRunnable);
+//        while (true) {
+//            int bufferIndex = mVideoEncoder.dequeueOutputBuffer(mVideoBufferInfo, 0);
+//
+//            if (bufferIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
+//                // nothing available yet
+//                break;
+//            } else if (bufferIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+//                // should happen before receiving buffers, and should only happen once
+//                if (mTrackIndex >= 0) {
+//                    throw new RuntimeException("format changed twice");
+//                }
+//                mTrackIndex = mMuxer.addTrack(mVideoEncoder.getOutputFormat());
+//                if (!mMuxerStarted && mTrackIndex >= 0) {
+//                    mMuxer.start();
+//                    mMuxerStarted = true;
+//                }
+//            } else if (bufferIndex < 0) {
+//                // not sure what's going on, ignore it
+//            } else {
+//                ByteBuffer encodedData = mVideoEncoder.getOutputBuffer(bufferIndex);
+//                if (encodedData == null) {
+//                    throw new RuntimeException("couldn't fetch buffer at index " + bufferIndex);
+//                }
+//
+//                if ((mVideoBufferInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
+//                    mVideoBufferInfo.size = 0;
+//                }
+//
+//                if (mVideoBufferInfo.size != 0) {
+//                    if (mMuxerStarted) {
+//                        encodedData.position(mVideoBufferInfo.offset);
+//                        encodedData.limit(mVideoBufferInfo.offset + mVideoBufferInfo.size);
+//                        mMuxer.writeSampleData(mTrackIndex, encodedData, mVideoBufferInfo);
+//                    } else {
+//                        // muxer not started
+//                    }
+//                }
+//
+//                mVideoEncoder.releaseOutputBuffer(bufferIndex, false);
+//
+//                if ((mVideoBufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
+//                    break;
+//                }
+//            }
+//        }
+//
+//        mDrainHandler.postDelayed(mDrainEncoderRunnable, 10);
+//        return false;
+//    }
 
 
     /**
@@ -464,18 +449,18 @@ public class MainActivity extends AppCompatActivity {
     //@TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-         if (REQUEST_CODE_CAPTURE_PERM == requestCode) {
-            if (resultCode == RESULT_OK) {
-                mMediaProjection = (MediaProjection) mProjectionManager.getMediaProjection(resultCode, data);
-                //camera2VideoFragment.startRecordingVideo();
-
-                startScreenRecording(); // defined below
-            } else {
-                Toast.makeText(this, "Screen recording is mandatory", Toast.LENGTH_SHORT).show();
-                finish();
-                // user did not grant permissions
-            }
-        }
+//         if (REQUEST_CODE_CAPTURE_PERM == requestCode) {
+//            if (resultCode == RESULT_OK) {
+//                mMediaProjection = (MediaProjection) mProjectionManager.getMediaProjection(resultCode, data);
+//                //camera2VideoFragment.startRecordingVideo();
+//
+//                startScreenRecording(); // defined below
+//            } else {
+////                Toast.makeText(this, "Screen recording is mandatory", Toast.LENGTH_SHORT).show();
+////                finish();
+//                // user did not grant permissions
+//            }
+//        }
     }
 
 
@@ -485,11 +470,17 @@ public class MainActivity extends AppCompatActivity {
 
     public void onSaveSignatureAndCloseApplication(View view) {
         if (isPadSigned){
-            Toast.makeText(this, "Screen recording saved.", Toast.LENGTH_SHORT).show();
+
             //camera2VideoFragment.stopRecordingVideo();
-            onStopScreenRecording(view);
+//            onStopScreenRecording(view);
+            inner_layout.setVisibility(View.GONE);
+
+            reset_button.setEnabled(false);
+            saveButton.setEnabled(false);
+            mSignaturePad.setEnabled(false);
             Bitmap signBitmap = Utils.rescaleBitmapWidthHeight(mSignaturePad.getSignatureBitmap(), ApplicationConstants.IMAGE_SIZE);
-            GlobalVariables.signatureImagePath = Utils.storeImage(signBitmap, this, 100);
+            GlobalVariables.signatureImagePath = Utils.storeImage(signBitmap, this, 100, false);
+
             startActivity();
             finish();
 
@@ -504,7 +495,7 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra(ApplicationConstants.COUNTRY_CODE, getIntent().getStringExtra(ApplicationConstants.COUNTRY_CODE));
         intent.putExtra(ApplicationConstants.MOBILE_NUMBER, getIntent().getStringExtra(ApplicationConstants.MOBILE_NUMBER));
         intent.putExtra(ApplicationConstants.POSITION, ApplicationConstants.END);
-        startActivityForResult(intent, MainActivity.REQUEST_CODE_CAPTURE_PERM);
+        startActivity(intent);
     }
 
     public void onFullScreenMode(View view) {
@@ -515,20 +506,20 @@ public class MainActivity extends AppCompatActivity {
 
         pdfView = (PDFView) findViewById(R.id.pdfView);
         pdfView.setVisibility(View.VISIBLE);
-        findViewById(R.id.download_file_button).setVisibility(View.GONE);
+        //findViewById(R.id.download_file_button).setVisibility(View.GONE);
         pdfView.fromFile(file).load();
 
-        onStartScreenRecording(null);
+//        onStartScreenRecording(null);
     }
 
     public void loadFile() {
         pdfView = (PDFView) findViewById(R.id.pdfView);
         pdfView.setVisibility(View.VISIBLE);
-        findViewById(R.id.download_file_button).setVisibility(View.GONE);
+        //findViewById(R.id.download_file_button).setVisibility(View.GONE);
 
         pdfView.fromFile(new File("/storage/emulated/0/DCIM/temp.pdf"))
                 .load();
-        onStartScreenRecording(null);
+//        onStartScreenRecording(null);
     }
 
 

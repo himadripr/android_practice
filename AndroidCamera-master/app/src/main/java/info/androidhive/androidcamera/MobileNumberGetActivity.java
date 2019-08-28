@@ -1,5 +1,6 @@
 package info.androidhive.androidcamera;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -9,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.AppCompatEditText;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -21,6 +23,9 @@ public class MobileNumberGetActivity extends AppCompatActivity {
     String hint;
     private CountryCodePicker ccp;
     private ProgressDialog progressDialog;
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -29,6 +34,8 @@ public class MobileNumberGetActivity extends AppCompatActivity {
         edtPhoneNumber = (EditText) findViewById(R.id.phone_number_edt);
         invisible_mobile_number_hint = (AppCompatEditText) findViewById(R.id.invisible_mobile_number_hint);
         ccp.registerPhoneNumberTextView(invisible_mobile_number_hint);
+
+
         ccp.setOnCountryChangeListener(new CountryCodePicker.OnCountryChangeListener() {
             @Override
             public void onCountrySelected(Country selectedCountry) {
@@ -39,6 +46,11 @@ public class MobileNumberGetActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     private String removeSpcaesAndFirst0FromTheMobileNumberHint(String string){
@@ -60,11 +72,13 @@ public class MobileNumberGetActivity extends AppCompatActivity {
     private void displayMessageForTheMobileNumberPresence(){
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Important");
-        builder.setMessage("Do you have the mobile number "+edtPhoneNumber.getText().toString()+" present in this handset because the app will do the auto otp verification.");
+        builder.setMessage("Do you have the mobile number "+edtPhoneNumber.getText().toString()+" present in this handset because the app will do the auto one time password verification.");
         builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                startActivity();
+                hideKeyboard(MobileNumberGetActivity.this);
+                startScreenRecordingActivity();
+                MobileNumberGetActivity.this.finish();
             }
         });
         builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -76,22 +90,24 @@ public class MobileNumberGetActivity extends AppCompatActivity {
         builder.show();
     }
 
-    private void startActivity(){
-        Intent intent = new Intent(this, OtpSendAndVerificationActivity.class);
+    public static void hideKeyboard(Activity activity) {
+        InputMethodManager imm = (InputMethodManager) activity.getSystemService(Activity.INPUT_METHOD_SERVICE);
+        //Find the currently focused view, so we can grab the correct window token from it.
+        View view = activity.getCurrentFocus();
+        //If no view currently has focus, create a new one, just so we can grab a window token from it
+        if (view == null) {
+            view = new View(activity);
+        }
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
+
+    private void startScreenRecordingActivity(){
+        Intent intent = new Intent(this, ScreenRecordingInitiationActivity.class);
         intent.putExtra(ApplicationConstants.COUNTRY_CODE, ccp.getSelectedCountryCode());
         intent.putExtra(ApplicationConstants.MOBILE_NUMBER, edtPhoneNumber.getText().toString());
-        startActivityForResult(intent, MainActivity.REQUEST_CODE_CAPTURE_PERM);
+        startActivity(intent);
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == MainActivity.REQUEST_CODE_CAPTURE_PERM){
-            this.setResult(resultCode);
-
-        }
-        finish();
-    }
 
     public void onProceed(View view) {
         String hint = edtPhoneNumber.getHint().toString();

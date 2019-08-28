@@ -2,6 +2,7 @@ package info.androidhive.androidcamera.utility;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
@@ -47,7 +48,13 @@ public class Utils {
 
     private static final String TAG = "Utils";
 
-    public static String storeImage(Bitmap image, Context context, int quality) {
+    public static String storeImage(Bitmap image, Context context, int quality, boolean isRotation) {
+        if (isRotation){
+            if (image.getWidth()>image.getHeight()){
+                image = getRotatedBitmap(image, 270);
+            }
+        }
+
         File pictureFile = getOutputMediaFile(context);
         if (pictureFile == null) {
             Log.d(TAG,
@@ -66,6 +73,17 @@ public class Utils {
             Log.d(TAG, "Error accessing file: " + e.getMessage());
             return null;
         }
+    }
+
+    private static Bitmap getRotatedBitmap(Bitmap bitmapOrg, int degree){
+        Matrix matrix = new Matrix();
+
+        matrix.postRotate(degree);
+
+        Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmapOrg, bitmapOrg.getWidth(), bitmapOrg.getHeight(), true);
+
+        return Bitmap.createBitmap(scaledBitmap, 0, 0, scaledBitmap.getWidth(), scaledBitmap.getHeight(), matrix, true);
+
     }
 
     /** Create a File for saving an image or video */
@@ -142,7 +160,7 @@ public class Utils {
     }
 
     public static void isInternetConnectionAvailable(final ProcessAfterCheckingInternetConnection processAfterCheckingInternetConnection, Context context){
-        String url = ApplicationConstants.BASE_URL;
+        String url = ApplicationConstants.CHECK_CONNECTION_URL;
         InputStreamVolleyRequest request = new InputStreamVolleyRequest(Request.Method.GET, url,
                 new Response.Listener<byte[]>() {
                     @Override
@@ -162,7 +180,7 @@ public class Utils {
                 } else if (error instanceof TimeoutError){
                     processAfterCheckingInternetConnection.processRequest(false, ConnectionEnums.SERVER_DOWN);
                 } else {
-                    processAfterCheckingInternetConnection.processRequest(true, null);
+                    processAfterCheckingInternetConnection.processRequest(false, ConnectionEnums.OTHER_ERROR);
                 }
 
                 error.printStackTrace();

@@ -3,6 +3,7 @@ package info.androidhive.androidcamera;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.CountDownTimer;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -41,6 +42,10 @@ public class CompleteSessionActivity extends AppCompatActivity {
         temp_layout = findViewById(R.id.temp_layout);
         button_complete_session = findViewById(R.id.button_complete_session);
         button_submit = findViewById(R.id.button_submit);
+        button_submit.setVisibility(View.GONE);
+        temp_layout.setVisibility(View.VISIBLE);
+//        MyCountDownTimer myCountDownTimer = new MyCountDownTimer(4000, 1000);
+//        myCountDownTimer.start();
         checkInternetConnection();
 
     }
@@ -150,4 +155,32 @@ public class CompleteSessionActivity extends AppCompatActivity {
     public void onSubmit(View view) {
         checkInternetConnection();
     }
+
+    private class MyCountDownTimer extends CountDownTimer {
+
+
+        /**
+         * @param millisInFuture    The number of millis in the future from the call
+         *                          to {@link #start()} until the countdown is done and {@link #onFinish()}
+         *                          is called.
+         * @param countDownInterval The interval along the way to receive
+         *                          {@link #onTick(long)} callbacks.
+         */
+        public MyCountDownTimer(long millisInFuture, long countDownInterval) {
+            super(millisInFuture, countDownInterval);
+
+        }
+
+        @Override
+        public void onTick(long millisUntilFinished) {
+
+        }
+
+        @Override
+        public void onFinish() {
+            checkInternetConnection();
+        }
+    }
+
+
 }

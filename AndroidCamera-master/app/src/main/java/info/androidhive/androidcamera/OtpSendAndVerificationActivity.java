@@ -150,10 +150,10 @@ public class OtpSendAndVerificationActivity extends AppCompatActivity implements
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == MainActivity.REQUEST_CODE_CAPTURE_PERM){
-            this.setResult(resultCode);
-
-        }
+//        if (requestCode == MainActivity.REQUEST_CODE_CAPTURE_PERM){
+//            this.setResult(resultCode);
+//
+//        }
         finish();
     }
 
@@ -169,15 +169,8 @@ public class OtpSendAndVerificationActivity extends AppCompatActivity implements
         intent.putExtra(ApplicationConstants.COUNTRY_CODE, getIntent().getStringExtra(ApplicationConstants.COUNTRY_CODE));
         intent.putExtra(ApplicationConstants.MOBILE_NUMBER, getIntent().getStringExtra(ApplicationConstants.MOBILE_NUMBER));
         intent.putExtra(ApplicationConstants.POSITION, ApplicationConstants.START);
-        startActivityForResult(intent, MainActivity.REQUEST_CODE_CAPTURE_PERM);
+        startActivity(intent);
     }
-
-//    private void startActivity(){
-//
-//        startActivityForResult(new Intent(this,
-//                        FaceTrackerActivity.class),
-//                MainActivity.REQUEST_CODE_CAPTURE_PERM);
-//    }
 
     /**
      *
@@ -202,15 +195,15 @@ public class OtpSendAndVerificationActivity extends AppCompatActivity implements
     public void onVerified(String response) {
         progressDialog.dismiss();
         startActivity();
+        OtpSendAndVerificationActivity.this.finish();
     }
 
     @Override
     public void onVerificationFailed(Exception paramException) {
         progressDialog.dismiss();
         Toast.makeText(this, "Invalid otp", Toast.LENGTH_SHORT).show();
-        startActivityForResult(new Intent(this,
-                        MobileNumberGetActivity.class),
-                MainActivity.REQUEST_CODE_CAPTURE_PERM);
+        startActivity(new Intent(this, MobileNumberGetActivity.class));
+        OtpSendAndVerificationActivity.this.finish();
     }
 
     private class MyCountDownTimer extends CountDownTimer {
@@ -240,7 +233,13 @@ public class OtpSendAndVerificationActivity extends AppCompatActivity implements
             } else if (val==2){
                 progressDialog.dismiss();
                 startActivity();
+                OtpSendAndVerificationActivity.this.finish();
             }
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+
     }
 }

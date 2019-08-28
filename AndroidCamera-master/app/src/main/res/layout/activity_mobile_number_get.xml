@@ -4,6 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:padding="@dimen/activity_margin"
+    android:id="@+id/root_layout"
+
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context="info.androidhive.androidcamera.OtpSendAndVerificationActivity">

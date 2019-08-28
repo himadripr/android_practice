@@ -4,14 +4,12 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -22,10 +20,6 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.RequestQueue;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.HurlStack;
-import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.vision.CameraSource;
@@ -33,10 +27,6 @@ import com.google.android.gms.vision.MultiProcessor;
 import com.google.android.gms.vision.Tracker;
 import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.FaceDetector;
-import com.google.gson.JsonObject;
-import com.koushikdutta.async.http.body.FilePart;
-import com.koushikdutta.async.http.body.Part;
-import com.koushikdutta.ion.Ion;
 //
 //import org.apache.http.HttpEntity;
 //import org.apache.http.HttpResponse;
@@ -53,25 +43,13 @@ import com.koushikdutta.ion.Ion;
 //
 //
 //import org.apache.http.message.BasicNameValuePair;
-import org.json.JSONObject;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.lang.ref.WeakReference;
-import java.net.UnknownHostException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import info.androidhive.androidcamera.ApplicationConstants;
-import info.androidhive.androidcamera.CompleteSessionActivity;
 import info.androidhive.androidcamera.GlobalVariables;
 import info.androidhive.androidcamera.MainActivity;
 import info.androidhive.androidcamera.R;
@@ -117,6 +95,7 @@ public class FaceTrackerActivity extends AppCompatActivity {
 
         } else {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setCancelable(false);
             builder.setTitle("Scan your face again to complete the process");
             builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                 @Override
@@ -202,12 +181,11 @@ public class FaceTrackerActivity extends AppCompatActivity {
                 .build();
     }
 
-    private void startActivity(){
+    private void startMainActivity(){
         Intent intent = new Intent(this, MainActivity.class);
         intent.putExtra(ApplicationConstants.COUNTRY_CODE, getIntent().getStringExtra(ApplicationConstants.COUNTRY_CODE));
         intent.putExtra(ApplicationConstants.MOBILE_NUMBER, getIntent().getStringExtra(ApplicationConstants.MOBILE_NUMBER));
-        startActivityForResult(intent,
-                MainActivity.REQUEST_CODE_CAPTURE_PERM);
+        startActivity(intent);
     }
 
     private boolean getGpsLocationANDTimeStamp(){
@@ -254,17 +232,18 @@ public class FaceTrackerActivity extends AppCompatActivity {
 
                 bitmapCaptured = Utils.rescaleBitmapWidthHeight(bitmapCaptured, ApplicationConstants.IMAGE_SIZE);
                 imageCaptureFlag = false;
-                String filePath = Utils.storeImage(bitmapCaptured, getApplicationContext(), 100);
+                String filePath = Utils.storeImage(bitmapCaptured, getApplicationContext(), 100, true);
 
                 if (filePath!=null){
                     // Toast.makeText(FaceTrackerActivity.this, "Image is saved at location : "+filePath, Toast.LENGTH_LONG).show();
 
                     if (FaceTrackerActivity.this.getIntent().getStringExtra(ApplicationConstants.POSITION).equals(ApplicationConstants.START)){
                         GlobalVariables.startingImageFilePath = filePath;
-                        startActivity();
+                        startMainActivity();
+                        finish();
                     } else if (FaceTrackerActivity.this.getIntent().getStringExtra(ApplicationConstants.POSITION).equals(ApplicationConstants.END)){
                         GlobalVariables.endingImageFilePath = filePath;
-                        startCompleteSessionActivity();
+                        finish();
 
                     }
                 } else {
@@ -276,15 +255,15 @@ public class FaceTrackerActivity extends AppCompatActivity {
         });
     }
 
-    private void startCompleteSessionActivity(){
-        Intent intent = new Intent(this, CompleteSessionActivity.class);
-        intent.putExtra(ApplicationConstants.COUNTRY_CODE, getIntent().getStringExtra(ApplicationConstants.COUNTRY_CODE));
-        intent.putExtra(ApplicationConstants.MOBILE_NUMBER, getIntent().getStringExtra(ApplicationConstants.MOBILE_NUMBER));
-        startActivityForResult(intent,
-                MainActivity.REQUEST_CODE_CAPTURE_PERM);
-        finish();
-
-    }
+//    private void startCompleteSessionActivity(){
+//        Intent intent = new Intent(this, CompleteSessionActivity.class);
+//        intent.putExtra(ApplicationConstants.COUNTRY_CODE, getIntent().getStringExtra(ApplicationConstants.COUNTRY_CODE));
+//        intent.putExtra(ApplicationConstants.MOBILE_NUMBER, getIntent().getStringExtra(ApplicationConstants.MOBILE_NUMBER));
+//        startActivityForResult(intent,
+//                MainActivity.REQUEST_CODE_CAPTURE_PERM);
+//        finish();
+//
+//    }
 
 
     /**
@@ -309,10 +288,10 @@ public class FaceTrackerActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == MainActivity.REQUEST_CODE_CAPTURE_PERM){
-            this.setResult(resultCode);
-
-        }
+//        if (requestCode == MainActivity.REQUEST_CODE_CAPTURE_PERM){
+//            this.setResult(resultCode);
+//
+//        }
         finish();
     }
 
@@ -489,6 +468,11 @@ public class FaceTrackerActivity extends AppCompatActivity {
         public void onDone() {
             mOverlay.remove(mFaceGraphic);
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+
     }
 
 

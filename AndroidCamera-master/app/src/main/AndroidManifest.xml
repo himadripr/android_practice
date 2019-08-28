@@ -69,7 +69,7 @@
             android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/provider_paths"/>
+                android:resource="@xml/provider_paths" />
         </provider>
 
         <activity android:name=".LaunchingActivity">
@@ -86,8 +86,10 @@
             android:screenOrientation="nosensor" />
         <activity
             android:name=".CompleteSessionActivity"
-            android:screenOrientation="nosensor"></activity>
-        <activity android:name=".ConnectionFailureActivity"></activity>
+            android:screenOrientation="nosensor" />
+        <activity android:name=".ConnectionFailureActivity" android:screenOrientation="nosensor" />
+        <activity android:name=".ScreenRecordingInitiationActivity"
+            android:screenOrientation="nosensor" />
     </application>
 
 </manifest>

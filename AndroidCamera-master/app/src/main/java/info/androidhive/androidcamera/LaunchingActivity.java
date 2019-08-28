@@ -1,6 +1,7 @@
 package info.androidhive.androidcamera;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -9,7 +10,11 @@ import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
+
+import com.wang.avi.AVLoadingIndicatorView;
 
 import info.androidhive.androidcamera.enums.ConnectionEnums;
 import info.androidhive.androidcamera.face_tracking.FaceTrackerActivity;
@@ -30,10 +35,17 @@ public class LaunchingActivity extends AppCompatActivity {
     private final int MY_PERMISSIONS_REQUEST_SYSTEM_ALERT_WINDOW = 19;
     private final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_COARSE_LOCATION = 20;
 
+    private RelativeLayout rootLayout;
+    private AVLoadingIndicatorView avindicatorview;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_launching);
+        rootLayout = findViewById(R.id.root_layout);
+        rootLayout.setVisibility(View.INVISIBLE);
+        avindicatorview = findViewById(R.id.avindicatorview);
+        avindicatorview.show();
         checkPermissions();
 
     }
@@ -91,6 +103,9 @@ public class LaunchingActivity extends AppCompatActivity {
     }
 
     private void checkInternetConnection(){
+        rootLayout.setVisibility(View.VISIBLE);
+
+
         Utils.isInternetConnectionAvailable(new ProcessAfterCheckingInternetConnection() {
             @Override
             public void processRequest(boolean connectionStatus, ConnectionEnums connectionEnums) {
@@ -122,7 +137,7 @@ public class LaunchingActivity extends AppCompatActivity {
 //        readSms();
         startActivityForResult(new Intent(LaunchingActivity.this,
                         MobileNumberGetActivity.class),
-                MainActivity.REQUEST_CODE_CAPTURE_PERM);
+                ApplicationConstants.REQUEST_CODE_FOR_MAIN_APPLICATION);
     }
 
     private void configureSettings(){
@@ -156,7 +171,7 @@ public class LaunchingActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == MainActivity.REQUEST_CODE_CAPTURE_PERM){
+        if (requestCode == ApplicationConstants.REQUEST_CODE_FOR_MAIN_APPLICATION){
             this.setResult(resultCode);
 
         }
