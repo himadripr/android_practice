@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:custom="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -23,7 +24,7 @@
             android:gravity="center"
             android:textSize="20sp"
             android:textColor="@android:color/black"
-            android:id="@+id/processing_text_view"
+            android:id="@+id/information_text_view"
             android:text="Data upload in process."/>
 
         <TextView
@@ -32,9 +33,21 @@
             android:layout_centerHorizontal="true"
             android:gravity="center"
             android:textSize="14sp"
-            android:layout_below="@+id/processing_text_view"
-
+            android:layout_below="@+id/information_text_view"
+            android:id="@+id/text_please_wait"
             android:text="Please wait....."/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_margin="16dp"
+            android:text="12MB / 100MB"
+            android:layout_centerHorizontal="true"
+            android:gravity="center"
+            android:textSize="17sp"
+            android:id="@+id/size_textview"
+            android:textStyle="italic"
+            android:layout_below="@+id/text_please_wait"
+            android:layout_height="wrap_content" />
     </RelativeLayout>
 
 
@@ -43,11 +56,27 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         style="@style/AVLoadingIndicatorView"
-        android:visibility="visible"
+        android:visibility="gone"
         android:layout_centerInParent="true"
         app:indicatorName="BallPulseIndicator"
         app:indicatorColor="@color/colorPrimaryDark"
     />
+
+    <com.github.lzyzsd.circleprogress.DonutProgress
+        android:id="@+id/donut_progress"
+        android:layout_width="170dp"
+        android:layout_height="170dp"
+        custom:donut_finished_color="@color/colorPrimaryDark"
+        custom:donut_finished_stroke_width="8dp"
+        android:backgroundTint="@color/colorPrimaryDark"
+        android:backgroundTintMode="add"
+        android:layout_centerInParent="true"
+        custom:donut_show_text="true"
+        custom:donut_text_size = "30sp"
+        custom:donut_text_color = "@color/colorPrimaryDark"
+
+        custom:donut_unfinished_color="@color/primary_material_light"
+        custom:donut_unfinished_stroke_width="8dp" />
 
     <LinearLayout
         android:layout_width="match_parent"

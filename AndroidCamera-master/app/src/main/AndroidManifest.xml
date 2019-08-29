@@ -87,9 +87,15 @@
         <activity
             android:name=".CompleteSessionActivity"
             android:screenOrientation="nosensor" />
-        <activity android:name=".ConnectionFailureActivity" android:screenOrientation="nosensor" />
-        <activity android:name=".ScreenRecordingInitiationActivity"
+        <activity
+            android:name=".ConnectionFailureActivity"
             android:screenOrientation="nosensor" />
+        <activity
+            android:name=".ScreenRecordingInitiationActivity"
+            android:screenOrientation="nosensor" />
+        <activity android:name=".TestActivity">
+
+        </activity>
     </application>
 
 </manifest>

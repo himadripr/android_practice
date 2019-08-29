@@ -14,7 +14,17 @@ import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.androidnetworking.AndroidNetworking;
+import com.androidnetworking.common.Priority;
+import com.androidnetworking.error.ANError;
+import com.androidnetworking.interfaces.JSONObjectRequestListener;
+import com.androidnetworking.interfaces.UploadProgressListener;
+import com.github.lzyzsd.circleprogress.DonutProgress;
 import com.wang.avi.AVLoadingIndicatorView;
+
+import org.json.JSONObject;
+
+import java.io.File;
 
 import info.androidhive.androidcamera.enums.ConnectionEnums;
 import info.androidhive.androidcamera.face_tracking.FaceTrackerActivity;
@@ -35,6 +45,8 @@ public class LaunchingActivity extends AppCompatActivity {
     private final int MY_PERMISSIONS_REQUEST_SYSTEM_ALERT_WINDOW = 19;
     private final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_COARSE_LOCATION = 20;
 
+
+
     private RelativeLayout rootLayout;
     private AVLoadingIndicatorView avindicatorview;
 
@@ -45,6 +57,7 @@ public class LaunchingActivity extends AppCompatActivity {
         rootLayout = findViewById(R.id.root_layout);
         rootLayout.setVisibility(View.INVISIBLE);
         avindicatorview = findViewById(R.id.avindicatorview);
+
         avindicatorview.show();
         checkPermissions();
 
@@ -98,7 +111,12 @@ public class LaunchingActivity extends AppCompatActivity {
         }
         else {
             checkInternetConnection();
+            //uploadTest();
         }
+
+    }
+
+    private void uploadTest(){
 
     }
 

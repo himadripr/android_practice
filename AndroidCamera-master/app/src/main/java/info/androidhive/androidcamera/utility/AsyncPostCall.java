@@ -30,30 +30,36 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class AsyncPostCall extends AsyncTask<Void, Void, Boolean> {
-        WeakReference<Activity> activityWeakReference;
-        ArrayList<Exception> exceptions;
-        PostCallResponseHandler postCallResponseHandler;
+    WeakReference<Activity> activityWeakReference;
+    ArrayList<Exception> exceptions;
+    PostCallResponseHandler postCallResponseHandler;
 
-        public AsyncPostCall(Activity activity, PostCallResponseHandler postCallResponseHandler){
-            activityWeakReference = new WeakReference<Activity>(activity);
-            exceptions = new ArrayList<>();
-            this.postCallResponseHandler = postCallResponseHandler;
-        }
+    public AsyncPostCall(Activity activity, PostCallResponseHandler postCallResponseHandler){
+        activityWeakReference = new WeakReference<Activity>(activity);
+        exceptions = new ArrayList<>();
+        this.postCallResponseHandler = postCallResponseHandler;
+    }
 
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
+    @Override
+    protected void onPreExecute() {
+        super.onPreExecute();
 
-        }
+    }
 
-        @Override
-        protected Boolean doInBackground(Void... voids) {
-            String result = uploadData();
-            downloadSignedFileForTheGivenMobileNumber();
-            return true;
-        }
+    @Override
+    protected Boolean doInBackground(Void... voids) {
+        String result = uploadData();
+        downloadSignedFileForTheGivenMobileNumber();
+        return true;
+    }
 
-        public String uploadData() {
+    @Override
+    protected void onProgressUpdate(Void... values) {
+        super.onProgressUpdate(values);
+
+    }
+
+    public String uploadData() {
 
             try {
 
@@ -125,9 +131,9 @@ public class AsyncPostCall extends AsyncTask<Void, Void, Boolean> {
                             try {
                                 if (response!=null) {
                                     FileOutputStream outputStream;
-                                    String fileName = Utils.getRootPathOfApp(activityWeakReference.get().getApplicationContext());
+                                    String dirPath = Utils.getRootPathOfApp(activityWeakReference.get().getApplicationContext());
                                     String timeStamp = String.valueOf(System.currentTimeMillis());
-                                    String name = fileName+"/"+"Signed_"+timeStamp+".pdf";
+                                    String name = dirPath+"/"+"Signed_"+timeStamp+".pdf";
                                     File file = new File(name);
                                     file.createNewFile();
                                     outputStream = new FileOutputStream(file);

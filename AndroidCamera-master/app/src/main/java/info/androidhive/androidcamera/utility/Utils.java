@@ -15,6 +15,16 @@ import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.HurlStack;
 import com.android.volley.toolbox.Volley;
+import com.androidnetworking.AndroidNetworking;
+import com.androidnetworking.common.Priority;
+import com.androidnetworking.error.ANError;
+import com.androidnetworking.interfaces.DownloadListener;
+import com.androidnetworking.interfaces.DownloadProgressListener;
+import com.androidnetworking.interfaces.JSONObjectRequestListener;
+import com.androidnetworking.interfaces.StringRequestListener;
+import com.androidnetworking.interfaces.UploadProgressListener;
+
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -159,7 +169,7 @@ public class Utils {
 
     }
 
-    public static void isInternetConnectionAvailable(final ProcessAfterCheckingInternetConnection processAfterCheckingInternetConnection, Context context){
+    public static void isInternetConnectionAvailable(final ProcessAfterCheckingInternetConnection processAfterCheckingInternetConnection, final Context context){
         String url = ApplicationConstants.CHECK_CONNECTION_URL;
         InputStreamVolleyRequest request = new InputStreamVolleyRequest(Request.Method.GET, url,
                 new Response.Listener<byte[]>() {
@@ -188,5 +198,10 @@ public class Utils {
         }, null);
         RequestQueue mRequestQueue = Volley.newRequestQueue(context.getApplicationContext(), new HurlStack());
         mRequestQueue.add(request);
+
+        //using fast-android-networking
+
+
+
     }
 }

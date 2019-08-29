@@ -220,10 +220,10 @@ public class MainActivity extends AppCompatActivity {
                         try {
                             if (response!=null) {
                                 FileOutputStream outputStream;
-                                String fileName = Utils.getRootPathOfApp(getApplicationContext());
+                                String dirPath = Utils.getRootPathOfApp(getApplicationContext());
                                 String timeStamp = String.valueOf(System.currentTimeMillis());
-                                String name = fileName+"/"+timeStamp+".pdf";
-                                File file = new File(name);
+                                String filePath = dirPath+"/"+timeStamp+".pdf";
+                                File file = new File(filePath);
                                 file.createNewFile();
                                 outputStream = new FileOutputStream(file);
                                 outputStream.write(response);

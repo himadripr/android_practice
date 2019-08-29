@@ -136,7 +136,7 @@ public class ScreenRecordingInitiationActivity extends AppCompatActivity {
             mMediaProjection = null;
         }
         Log.i(TAG, "MediaProjection Stopped");
-        Toast.makeText(this, "Session recording saved.", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, "Session recording saved.", Toast.LENGTH_SHORT).show();
     }
 
     private class MediaProjectionCallback extends MediaProjection.Callback {
