@@ -58,14 +58,14 @@ public class Utils {
 
     private static final String TAG = "Utils";
 
-    public static String storeImage(Bitmap image, Context context, int quality, boolean isRotation) {
+    public static String storeImage(Bitmap image, Context context, int quality, boolean isRotation, String fileNamePreifx) {
         if (isRotation){
             if (image.getWidth()>image.getHeight()){
                 image = getRotatedBitmap(image, 270);
             }
         }
 
-        File pictureFile = getOutputMediaFile(context);
+        File pictureFile = getOutputMediaFile(context, fileNamePreifx);
         if (pictureFile == null) {
             Log.d(TAG,
                     "Error creating media file, check storage permissions: ");// e.getMessage());
@@ -97,7 +97,7 @@ public class Utils {
     }
 
     /** Create a File for saving an image or video */
-    private static File getOutputMediaFile(Context context){
+    private static File getOutputMediaFile(Context context, String fileNamePrefix){
         // To be safe, you should check that the SDCard is mounted
         // using Environment.getExternalStorageState() before doing this.
 
@@ -122,7 +122,7 @@ public class Utils {
         // Create a media file name
         String timeStamp = new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date());
         File mediaFile;
-        String mImageName="IMG_"+ timeStamp +".jpeg";
+        String mImageName=fileNamePrefix+"_"+ timeStamp +".jpeg";
         mediaFile = new File(mediaStorageDir.getPath() + File.separator + mImageName);
         return mediaFile;
     }
@@ -171,6 +171,7 @@ public class Utils {
 
     public static void isInternetConnectionAvailable(final ProcessAfterCheckingInternetConnection processAfterCheckingInternetConnection, final Context context){
         String url = ApplicationConstants.CHECK_CONNECTION_URL;
+
         InputStreamVolleyRequest request = new InputStreamVolleyRequest(Request.Method.GET, url,
                 new Response.Listener<byte[]>() {
                     @Override
@@ -201,7 +202,10 @@ public class Utils {
 
         //using fast-android-networking
 
+    }
 
-
+    public static String getCurrentDateAndTime(){
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyyyy_HHmmss");
+        return simpleDateFormat.format(new Date());
     }
 }

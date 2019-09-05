@@ -3,6 +3,7 @@ package info.androidhive.androidcamera;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.v4.app.Fragment;
@@ -49,6 +50,8 @@ public class MainActivity extends AppCompatActivity {
 //    public static final int REQUEST_CODE_CAPTURE_PERM = 1234;
 //    private MediaProjectionManager mProjectionManager;
 //    private int mScreenDensity;
+    private long signatureStartTime;
+    private long signatureEndTime;
     SignaturePad mSignaturePad;
     PDFView pdfView;
     RelativeLayout inner_layout;
@@ -123,12 +126,23 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onStartSigning() {
                 //Event triggered when the pad is touched
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    ScreenRecordingInitiationActivity.mMediaRecorder.resume();
+                } else {
+                    signatureStartTime = System.currentTimeMillis()-padding;
+                }
             }
 
             @Override
             public void onSigned() {
                 //Event triggered when the pad is signed
                 isPadSigned = true;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    ScreenRecordingInitiationActivity.mMediaRecorder.pause();
+                } else {
+                    signatureEndTime = System.currentTimeMillis()+padding;
+                }
+
             }
 
             @Override
@@ -146,6 +160,8 @@ public class MainActivity extends AppCompatActivity {
         //setupViewPager(viewPager);
 
     }
+
+    long padding = 500; // 1/2 seconds
 
 //    private void downloadSampleVideoToDisplayForScreenRecording(){
 //        progressDialog = ProgressDialog.show(this, "", "Downloading File...");
@@ -229,6 +245,12 @@ public class MainActivity extends AppCompatActivity {
                                 outputStream.write(response);
                                 outputStream.close();
                                 Toast.makeText(MainActivity.this, "Download complete.", Toast.LENGTH_SHORT).show();
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                    ScreenRecordingInitiationActivity.mMediaRecorder.pause();
+                                } else {
+                                    GlobalVariables.screenRecordingTimesInMillisisecondForCropping.add(System.currentTimeMillis());
+                                }
+
                                 loadFile(file);
                             }
                         } catch (Exception e) {
@@ -297,13 +319,13 @@ public class MainActivity extends AppCompatActivity {
 //
 //        // Get the display size and density.
 //        DisplayMetrics metrics = getResources().getDisplayMetrics();
-//        int screenWidth = metrics.widthPixels;
-//        int screenHeight = metrics.heightPixels;
+//        int cameraSourcePreviewWidth = metrics.widthPixels;
+//        int cameraSourcePreviewHeight = metrics.heightPixels;
 //        int screenDensity = metrics.densityDpi;
 //
 //        // Start the video input.
-//        mMediaProjection.createVirtualDisplay("Recording Display", screenWidth,
-//                screenHeight, screenDensity, 0 /* flags */, mInputSurface,
+//        mMediaProjection.createVirtualDisplay("Recording Display", cameraSourcePreviewWidth,
+//                cameraSourcePreviewHeight, screenDensity, 0 /* flags */, mInputSurface,
 //                null /* callback */, null /* handler */);
 //
 //        // Start the encoders
@@ -470,7 +492,13 @@ public class MainActivity extends AppCompatActivity {
 
     public void onSaveSignatureAndCloseApplication(View view) {
         if (isPadSigned){
-
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                ScreenRecordingInitiationActivity.mMediaRecorder.resume();
+            } else {
+                GlobalVariables.screenRecordingTimesInMillisisecondForCropping.add(signatureStartTime);
+                GlobalVariables.screenRecordingTimesInMillisisecondForCropping.add(signatureEndTime);
+                GlobalVariables.screenRecordingTimesInMillisisecondForCropping.add(System.currentTimeMillis());
+            }
             //camera2VideoFragment.stopRecordingVideo();
 //            onStopScreenRecording(view);
             inner_layout.setVisibility(View.GONE);
@@ -479,7 +507,8 @@ public class MainActivity extends AppCompatActivity {
             saveButton.setEnabled(false);
             mSignaturePad.setEnabled(false);
             Bitmap signBitmap = Utils.rescaleBitmapWidthHeight(mSignaturePad.getSignatureBitmap(), ApplicationConstants.IMAGE_SIZE);
-            GlobalVariables.signatureImagePath = Utils.storeImage(signBitmap, this, 100, false);
+            String prefixName = getIntent().getStringExtra(ApplicationConstants.MOBILE_NUMBER) + "_signature";
+            GlobalVariables.signatureImagePath = Utils.storeImage(signBitmap, this, 100, false, prefixName);
 
             startActivity();
             finish();

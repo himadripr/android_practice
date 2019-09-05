@@ -21,7 +21,6 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.support.v4.app.ActivityCompat;
 import android.util.AttributeSet;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -31,6 +30,8 @@ import com.google.android.gms.common.images.Size;
 import com.google.android.gms.vision.CameraSource;
 
 import java.io.IOException;
+
+import info.androidhive.androidcamera.ApplicationConstants;
 
 public class CameraSourcePreview extends ViewGroup {
     private static final String TAG = "CameraSourcePreview";
@@ -138,25 +139,25 @@ public class CameraSourcePreview extends ViewGroup {
 
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        int width = 320; //320
-        int height = 240; //240
-//        DisplayMetrics displayMetrics = new DisplayMetrics();
-//        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-//        height = displayMetrics.heightPixels;
-//        width = displayMetrics.widthPixels;
-        if (mCameraSource != null) {
-            Size size = mCameraSource.getPreviewSize();
-            if (size != null) {
-                width = size.getWidth();
-                height = size.getHeight();
-            }
-        }
+        int width = 720; //320
+        int height = 960; //240
+
+//        if (mCameraSource != null) {
+//            Size size = mCameraSource.getPreviewSize();
+//            if (size != null) {
+//                width = size.getWidth();
+//                height = size.getHeight();
+//            }
+//        }
 
         // Swap width and height sizes when in portrait, since it will be rotated 90 degrees
         if (isPortraitMode()) {
-            int tmp = width;
-            width = height;
-            height = tmp;
+            if (width>height){
+                int tmp = width;
+                width = height;
+                height = tmp;
+            }
+
         }
 
         final int layoutWidth = right - left;

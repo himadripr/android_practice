@@ -1,6 +1,5 @@
 package info.androidhive.androidcamera;
 
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.CountDownTimer;
@@ -19,31 +18,21 @@ import com.androidnetworking.common.Priority;
 import com.androidnetworking.error.ANError;
 import com.androidnetworking.interfaces.DownloadListener;
 import com.androidnetworking.interfaces.DownloadProgressListener;
-import com.androidnetworking.interfaces.JSONObjectRequestListener;
 import com.androidnetworking.interfaces.StringRequestListener;
 import com.androidnetworking.interfaces.UploadProgressListener;
 import com.github.lzyzsd.circleprogress.DonutProgress;
-import com.google.android.gms.vision.text.Line;
 import com.wang.avi.AVLoadingIndicatorView;
 
-import org.json.JSONObject;
-
 import java.io.File;
-import java.util.concurrent.ExecutionException;
 
 import info.androidhive.androidcamera.enums.ConnectionEnums;
-import info.androidhive.androidcamera.interfaces.PostCallResponseHandler;
 import info.androidhive.androidcamera.interfaces.ProcessAfterCheckingInternetConnection;
-import info.androidhive.androidcamera.utility.AsyncPostCall;
 import info.androidhive.androidcamera.utility.Utils;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 public class CompleteSessionActivity extends AppCompatActivity {
     LinearLayout root_layout;
     RelativeLayout temp_layout;
-    //AVLoadingIndicatorView avindicatorview;
+    AVLoadingIndicatorView avindicatorview;
     Button button_complete_session, button_submit;
     DonutProgress donut_progress;
     TextView information_text_view, size_textview;
@@ -55,15 +44,19 @@ public class CompleteSessionActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_complete_session);
         root_layout = findViewById(R.id.root_layout);
-        //avindicatorview = findViewById(R.id.avindicatorview);
+        avindicatorview = findViewById(R.id.avindicatorview);
+        avindicatorview.setVisibility(View.VISIBLE);
+        avindicatorview.show();
         temp_layout = findViewById(R.id.temp_layout);
         button_complete_session = findViewById(R.id.button_complete_session);
         button_submit = findViewById(R.id.button_submit);
         button_submit.setVisibility(View.GONE);
         temp_layout.setVisibility(View.VISIBLE);
         donut_progress = findViewById(R.id.donut_progress);
+        donut_progress.setVisibility(View.GONE);
         information_text_view = findViewById(R.id.information_text_view);
         size_textview = findViewById(R.id.size_textview);
+        AndroidNetworking.initialize(getApplicationContext());
         GlobalVariables.signedDocumentFilePath = null;
 //        MyCountDownTimer myCountDownTimer = new MyCountDownTimer(4000, 1000);
 //        myCountDownTimer.start();
@@ -75,7 +68,10 @@ public class CompleteSessionActivity extends AppCompatActivity {
         size_textview.setText("");
         button_submit.setVisibility(View.GONE);
         root_layout.setVisibility(View.INVISIBLE);
-        donut_progress.setVisibility(View.VISIBLE);
+        donut_progress.setVisibility(View.GONE);
+        avindicatorview.setVisibility(View.VISIBLE);
+        avindicatorview.show();
+        information_text_view.setText("Connecting to server.");
         donut_progress.setDonut_progress("0");
         temp_layout.setVisibility(View.VISIBLE);
     }
@@ -86,13 +82,7 @@ public class CompleteSessionActivity extends AppCompatActivity {
             @Override
             public void processRequest(boolean connectionStatus, ConnectionEnums connectionEnums) {
                 if (connectionStatus){
-                    try {
-                        uploadFilesToServer();
-                    } catch (ExecutionException e) {
-                        e.printStackTrace();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                    uploadFilesToServer();
                 } else {
                     switch (connectionEnums){
                         case NO_INTERNET_CONNECTION:
@@ -113,7 +103,8 @@ public class CompleteSessionActivity extends AppCompatActivity {
 
     public void resetScreen(){
         root_layout.setVisibility(View.INVISIBLE);
-        //avindicatorview.hide();
+        avindicatorview.hide();
+        avindicatorview.setVisibility(View.GONE);
         size_textview.setText("");
         donut_progress.setVisibility(View.GONE);
         temp_layout.setVisibility(View.INVISIBLE);
@@ -157,7 +148,7 @@ public class CompleteSessionActivity extends AppCompatActivity {
 
 
 
-    private void uploadFilesToServer() throws ExecutionException, InterruptedException {
+    private void uploadFilesToServer() {
         //progressDialog = ProgressDialog.show(this, "", "Processing...");
         //avindicatorview.show();
 
@@ -168,6 +159,8 @@ public class CompleteSessionActivity extends AppCompatActivity {
 //                processAfterPostCall();
 //            }
 //        }).execute();
+
+
         uploadFilesToServerTemp();
     }
 
@@ -199,6 +192,7 @@ public class CompleteSessionActivity extends AppCompatActivity {
 
 //
         String url = ApplicationConstants.BASE_URL+"/document/upload";
+
         AndroidNetworking.upload(url)
                 .addMultipartFile("screenRecording",new File(GlobalVariables.screenRecordingVideoFilePath))
                 .addMultipartFile("signature", new File(GlobalVariables.signatureImagePath))
@@ -219,13 +213,22 @@ public class CompleteSessionActivity extends AppCompatActivity {
                     @Override
                     public void onProgress(long bytesUploaded, long totalBytes) {
                         // do anything with progress
+                        avindicatorview.hide();
+                        avindicatorview.setVisibility(View.GONE);
+                        donut_progress.setVisibility(View.VISIBLE);
+                        information_text_view.setText("Data upload in progress.");
                         double bytesUploadedInMB = (double)bytesUploaded/1000000.0;
                         String bytesUploadedInMBString = String.format("%.2f", bytesUploadedInMB);
                         double totalBytesInMB = (double)totalBytes/1000000.0;
                         String totalBytesInMBString = String.format("%.2f", totalBytesInMB);
-                        size_textview.setText(bytesUploadedInMBString+"MB / "+totalBytesInMBString+"MB");
+                        size_textview.setText(bytesUploadedInMBString+" out of "+totalBytesInMBString+" MB uploaded");
                         int per = (int)((double)bytesUploaded/(double)totalBytes*100.0);
                         donut_progress.setDonut_progress(String.valueOf(per));
+                        if (per==100){
+                            donut_progress.setVisibility(View.GONE);
+                            avindicatorview.setVisibility(View.VISIBLE);
+                            avindicatorview.show();
+                        }
                         //System.out.print(bytesUploaded);
                     }
                 })
@@ -241,8 +244,8 @@ public class CompleteSessionActivity extends AppCompatActivity {
                     public void onError(ANError error) {
                         // handle error
                         error.printStackTrace();
-                        Toast.makeText(CompleteSessionActivity.this, error.getMessage(), Toast.LENGTH_SHORT).show();
-                        processAfterPostCall();
+                        Toast.makeText(CompleteSessionActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                        resetScreen();
                     }
                 });
     }
@@ -250,8 +253,11 @@ public class CompleteSessionActivity extends AppCompatActivity {
     public void downloadSignedDocument(){
         String url = ApplicationConstants.BASE_URL+"/getSignedDocument/"+getIntent().getStringExtra(ApplicationConstants.COUNTRY_CODE)+"/"+
                 getIntent().getStringExtra(ApplicationConstants.MOBILE_NUMBER);
-        information_text_view.setText("Downloading Signed document.");
+
         setScreenForDownloadingOrUploading();
+        avindicatorview.hide();
+        avindicatorview.setVisibility(View.GONE);
+        donut_progress.setVisibility(View.VISIBLE);
         final String dirPath = Utils.getRootPathOfApp(getApplicationContext());
         String timeStamp = String.valueOf(System.currentTimeMillis());
         final String fileName = "Signed_"+timeStamp+".pdf";
@@ -264,11 +270,12 @@ public class CompleteSessionActivity extends AppCompatActivity {
                     @Override
                     public void onProgress(long bytesDownloaded, long totalBytes) {
                         // do anything with progress
+                        information_text_view.setText("Downloading Signed document.");
                         double bytesDownloadedInMB = (double)bytesDownloaded/1000000.0;
                         String bytesDownloadedInMBString = String.format("%.2f", bytesDownloadedInMB);
                         double totalBytesInMB = (double)totalBytes/1000000.0;
                         String totalBytesInMBString = String.format("%.2f", totalBytesInMB);
-                        size_textview.setText(bytesDownloadedInMBString+"MB / "+totalBytesInMBString+"MB");
+                        size_textview.setText(bytesDownloadedInMBString+" out of "+totalBytesInMBString+" MB downloaded");
                         int per = (int)((double)bytesDownloaded/(double)totalBytes*100.0);
                         donut_progress.setDonut_progress(String.valueOf(per));
                     }
@@ -296,6 +303,8 @@ public class CompleteSessionActivity extends AppCompatActivity {
         //progressDialog.dismiss();
         //avindicatorview.hide();
         donut_progress.setVisibility(View.GONE);
+        avindicatorview.hide();
+        avindicatorview.setVisibility(View.GONE);
         button_submit.setVisibility(View.GONE);
         root_layout.setVisibility(View.VISIBLE);
         temp_layout.setVisibility(View.INVISIBLE);

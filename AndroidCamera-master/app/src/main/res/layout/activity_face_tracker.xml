@@ -3,6 +3,7 @@
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
+    android:id="@+id/root_layout"
     android:layout_height="match_parent"
     android:keepScreenOn="true">
 
@@ -12,27 +13,27 @@
     <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/topLayout"
-
-        android:layout_margin="10dp"
         android:layout_above="@+id/button_scan"
+        android:layout_margin="10dp"
+
         android:gravity="center"
         android:foregroundGravity="center"
         android:layout_centerHorizontal="true"
         android:orientation="vertical"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
         <info.androidhive.androidcamera.face_tracking.CameraSourcePreview
             android:id="@+id/preview"
             android:layout_gravity="center"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
             <info.androidhive.androidcamera.face_tracking.GraphicOverlay
                 android:id="@+id/faceOverlay"
                 android:layout_gravity="center"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
         </info.androidhive.androidcamera.face_tracking.CameraSourcePreview>
 
     </LinearLayout>

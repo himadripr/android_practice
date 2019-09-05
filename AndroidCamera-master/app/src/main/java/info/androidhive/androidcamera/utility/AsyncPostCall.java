@@ -19,7 +19,6 @@ import java.util.ArrayList;
 
 import info.androidhive.androidcamera.ApplicationConstants;
 import info.androidhive.androidcamera.GlobalVariables;
-import info.androidhive.androidcamera.face_tracking.FaceTrackerActivity;
 import info.androidhive.androidcamera.interfaces.PostCallResponseHandler;
 
 import okhttp3.MediaType;

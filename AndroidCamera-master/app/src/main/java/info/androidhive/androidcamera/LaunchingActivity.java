@@ -1,7 +1,6 @@
 package info.androidhive.androidcamera;
 
 import android.Manifest;
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -10,24 +9,14 @@ import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import com.androidnetworking.AndroidNetworking;
-import com.androidnetworking.common.Priority;
-import com.androidnetworking.error.ANError;
-import com.androidnetworking.interfaces.JSONObjectRequestListener;
-import com.androidnetworking.interfaces.UploadProgressListener;
-import com.github.lzyzsd.circleprogress.DonutProgress;
 import com.wang.avi.AVLoadingIndicatorView;
 
-import org.json.JSONObject;
-
-import java.io.File;
-
 import info.androidhive.androidcamera.enums.ConnectionEnums;
-import info.androidhive.androidcamera.face_tracking.FaceTrackerActivity;
 import info.androidhive.androidcamera.interfaces.ProcessAfterCheckingInternetConnection;
 import info.androidhive.androidcamera.utility.Utils;
 
@@ -60,6 +49,12 @@ public class LaunchingActivity extends AppCompatActivity {
 
         avindicatorview.show();
         checkPermissions();
+
+    }
+
+    private void assignScreenWidthAndHeight(){
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 
     }
 

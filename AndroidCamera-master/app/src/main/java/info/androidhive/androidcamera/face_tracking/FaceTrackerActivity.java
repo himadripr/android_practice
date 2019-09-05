@@ -10,18 +10,22 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.hardware.Camera;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.images.Size;
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.MultiProcessor;
 import com.google.android.gms.vision.Tracker;
@@ -65,10 +69,13 @@ public class FaceTrackerActivity extends AppCompatActivity {
     private static final String TAG = "FaceTracker";
     private boolean imageCaptureFlag = false;
     private CameraSource mCameraSource = null;
+    private Camera camera;
+    private Camera.Size cameraPreviewSize;
     //private TextView text;
     private CameraSourcePreview mPreview;
     private GraphicOverlay mGraphicOverlay;
     private TextView mUpdates;
+    private RelativeLayout root_layout;
 
     private static final int RC_HANDLE_GMS = 9001;
     // permission request codes need to be < 256
@@ -89,7 +96,8 @@ public class FaceTrackerActivity extends AppCompatActivity {
         mPreview = findViewById(R.id.preview);
         mGraphicOverlay = (GraphicOverlay) findViewById(R.id.faceOverlay);
         mUpdates = (TextView) findViewById(R.id.faceUpdates);
-
+        root_layout = (RelativeLayout) findViewById(R.id.root_layout);
+        //root_layout.setVisibility(View.INVISIBLE);
 
         if (getIntent().getStringExtra(ApplicationConstants.POSITION).equals(ApplicationConstants.START)){
 
@@ -179,6 +187,8 @@ public class FaceTrackerActivity extends AppCompatActivity {
                 .setRequestedFps(15.0f)
                 .setAutoFocusEnabled(true)
                 .build();
+
+
     }
 
     private void startMainActivity(){
@@ -232,7 +242,14 @@ public class FaceTrackerActivity extends AppCompatActivity {
 
                 bitmapCaptured = Utils.rescaleBitmapWidthHeight(bitmapCaptured, ApplicationConstants.IMAGE_SIZE);
                 imageCaptureFlag = false;
-                String filePath = Utils.storeImage(bitmapCaptured, getApplicationContext(), 100, true);
+                String prefixName = getIntent().getStringExtra(ApplicationConstants.MOBILE_NUMBER)+"";
+                if (getIntent().getStringExtra(ApplicationConstants.POSITION).equals(ApplicationConstants.START)){
+                    prefixName = prefixName+"_startingImage";
+                } else {
+                    prefixName = prefixName + "_endingImage";
+                }
+
+                String filePath = Utils.storeImage(bitmapCaptured, getApplicationContext(), 100, true, prefixName);
 
                 if (filePath!=null){
                     // Toast.makeText(FaceTrackerActivity.this, "Image is saved at location : "+filePath, Toast.LENGTH_LONG).show();
@@ -265,14 +282,14 @@ public class FaceTrackerActivity extends AppCompatActivity {
 //
 //    }
 
-
+    MyCountDownTimer myCountDownTimer = new MyCountDownTimer(3000, 1000);
     /**
      * Restarts the camera.
      */
     @Override
     protected void onResume() {
         super.onResume();
-
+        //myCountDownTimer.start();
         startCameraSource();
     }
 
@@ -374,7 +391,7 @@ public class FaceTrackerActivity extends AppCompatActivity {
             dlg.show();
         }
 
-        if (mCameraSource != null) {
+        if (mCameraSource != null ) {
             try {
                 mPreview.start(mCameraSource, mGraphicOverlay);
             } catch (IOException e) {
@@ -473,6 +490,56 @@ public class FaceTrackerActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
 
+    }
+
+    private class MyCountDownTimer extends CountDownTimer {
+
+
+        /**
+         * @param millisInFuture    The number of millis in the future from the call
+         *                          to {@link #start()} until the countdown is done and {@link #onFinish()}
+         *                          is called.
+         * @param countDownInterval The interval along the way to receive
+         *                          {@link #onTick(long)} callbacks.
+         */
+        public MyCountDownTimer(long millisInFuture, long countDownInterval) {
+            super(millisInFuture, countDownInterval);
+
+        }
+
+        @Override
+        public void onTick(long millisUntilFinished) {
+            Size size = mCameraSource.getPreviewSize();
+            System.out.println();
+            if (ApplicationConstants.cameraSourcePreviewHeight!=0 && ApplicationConstants.cameraSourcePreviewWidth!=0){
+                root_layout.setVisibility(View.VISIBLE);
+                this.cancel();
+            } else if (size!=null){
+                ApplicationConstants.cameraSourcePreviewWidth = size.getWidth();
+                ApplicationConstants.cameraSourcePreviewHeight = size.getHeight();
+                startFaceTrackerActivity();
+                FaceTrackerActivity.this.finish();
+                this.cancel();
+            }
+
+        }
+
+        @Override
+        public void onFinish() {
+            if (ApplicationConstants.cameraSourcePreviewHeight==0){
+                startFaceTrackerActivity();
+                FaceTrackerActivity.this.finish();
+
+            }
+        }
+    }
+
+    private void startFaceTrackerActivity(){
+        Intent intent = new Intent(this, FaceTrackerActivity.class);
+        intent.putExtra(ApplicationConstants.COUNTRY_CODE, getIntent().getStringExtra(ApplicationConstants.COUNTRY_CODE));
+        intent.putExtra(ApplicationConstants.MOBILE_NUMBER, getIntent().getStringExtra(ApplicationConstants.MOBILE_NUMBER));
+        intent.putExtra(ApplicationConstants.POSITION, getIntent().getStringExtra(ApplicationConstants.POSITION));
+        startActivity(intent);
     }
 
 
